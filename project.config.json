@@ -20,7 +20,20 @@
     "packNpmRelationList": [],
     "ignoreUploadUnusedFiles": true,
     "compileHotReLoad": false,
-    "skylineRenderEnable": true
+    "skylineRenderEnable": true,
+    "es6": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "lessSetting": {
+      "commonUseFilePath": "app.less"
+    }
   },
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},
@@ -35,5 +48,5 @@
     "ignore": [],
     "include": []
   },
-  "appid": "wx8fad35791153e662"
+  "appid": "wx7ba50359b0644dbe"
 }

@@ -1,11 +1,11 @@
 {
-  "name": "miniprogram-ts-less-quickstart",
+  "name": "wenwen-wxamp",
   "version": "1.0.0",
   "description": "",
   "scripts": {
   },
   "keywords": [],
-  "author": "",
+  "author": "iamwjun",
   "license": "",
   "dependencies": {
   },
