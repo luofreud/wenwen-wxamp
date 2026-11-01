@@ -1,28 +1,117 @@
-<!--index.wxml-->
-<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    <view class="userinfo">
-      <block wx:if="{{canIUseNicknameComp && !hasUserInfo}}">
-        <button class="avatar-wrapper" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
-          <image class="avatar" src="{{userInfo.avatarUrl}}"></image>
-        </button>
-        <view class="nickname-wrapper">
-          <text class="nickname-label">昵称</text>
-          <input type="nickname" class="nickname-input" placeholder="请输入昵称" bind:change="onInputChange" />
+<!-- pages/index/index.wxml -->
+<view wx:if="{{navigationReady}}" class="home-page">
+  <view
+    class="navigation-bar"
+    style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
+  >
+    <image
+      class="navigation-title"
+      src="/assets/images/title-bar.png"
+      mode="scaleToFill"
+      aria-label="问问星座"
+    />
+  </view>
+
+  <view class="mood-card">
+    <view class="mood-content">
+      <text class="user-name">北边最大最大最大的鱼</text>
+      <view class="mood-columns">
+        <view class="mood-overview">
+          <view class="score-heading">
+            <text class="score-label">今日心情</text>
+            <text class="score-value">80<text class="score-unit">分</text></text>
+          </view>
+          <view class="mood-bars">
+            <view wx:for="{{moodBars}}" wx:key="label" class="mood-bar-item">
+              <text class="bar-score">{{item.score}}分</text>
+              <view class="bar-track">
+                <view
+                  class="bar-fill bar-fill--{{item.tone}}"
+                  style="height: {{item.score}}%;"
+                ></view>
+              </view>
+              <text class="bar-label">{{item.label}}</text>
+            </view>
+          </view>
         </view>
-      </block>
-      <block wx:elif="{{!hasUserInfo}}">
-        <button wx:if="{{canIUseGetUserProfile}}" bindtap="getUserProfile"> 获取头像昵称 </button>
-        <view wx:else> 请使用2.10.4及以上版本基础库 </view>
-      </block>
-      <block wx:else>
-        <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" mode="cover"></image>
-        <text class="userinfo-nickname">{{userInfo.nickName}}</text>
-      </block>
-    </view>
-    <view class="usermotto">
-      <text class="user-motto">{{motto}}</text>
+
+        <view class="luck-grid">
+          <view wx:for="{{luckItems}}" wx:key="label" class="luck-card">
+            <view class="luck-icon luck-icon--{{item.tone}}">
+              <view wx:if="{{item.tone === 'color'}}" class="color-swatch"></view>
+              <text wx:else>{{item.icon}}</text>
+            </view>
+            <view class="luck-copy">
+              <text class="luck-value">{{item.value}}</text>
+              <text class="luck-label">{{item.label}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
-</scroll-view>
+
+  <view class="live-card">
+    <view class="live-copy">
+      <text class="live-title">xxxxx直播</text>
+      <text class="live-description">这是一段介绍文字这是一段介绍文字</text>
+      <view class="reservation-row">
+        <view class="avatar-group">
+          <image class="viewer-avatar" src="/assets/images/avatar.png" mode="aspectFill" />
+          <image class="viewer-avatar viewer-avatar--second" src="/assets/images/avatar.png" mode="aspectFill" />
+          <image class="viewer-avatar viewer-avatar--third" src="/assets/images/avatar.png" mode="aspectFill" />
+        </view>
+        <text class="reservation-count">210人已预约</text>
+      </view>
+      <button class="reserve-button" hover-class="reserve-button--pressed">去预约</button>
+    </view>
+  </view>
+
+  <image
+    class="app-banner"
+    src="/assets/images/home-banner.png"
+    mode="widthFix"
+    aria-label="问问星座APP，真人专业解析"
+  />
+
+  <view class="report-list">
+    <view
+      wx:for="{{reports}}"
+      wx:key="title"
+      class="report-card"
+      hover-class="content-card--pressed"
+    >
+      <view class="report-copy">
+        <text class="report-title">{{item.title}}</text>
+        <text class="report-description">{{item.description}}</text>
+      </view>
+      <image class="report-image" src="{{item.image}}" mode="aspectFit" />
+    </view>
+  </view>
+
+  <view class="more-section">
+    <view class="more-heading">
+      <image
+        class="more-title-image"
+        src="/assets/images/more-report.png"
+        mode="widthFix"
+        aria-label="更多测评"
+      />
+    </view>
+    <view
+      wx:for="{{moreReports}}"
+      wx:key="title"
+      class="more-card"
+      hover-class="content-card--pressed"
+    >
+      <view class="more-copy">
+        <text class="more-title">{{item.title}}</text>
+        <text class="more-description">{{item.description}}</text>
+      </view>
+      <view class="more-decoration more-decoration--{{item.tone}}" aria-hidden="true">
+        <view class="decoration-orbit"></view>
+        <view class="decoration-star">✦</view>
+      </view>
+    </view>
+  </view>
+</view>
