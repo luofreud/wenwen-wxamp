@@ -1,0 +1,102 @@
+<template name="detail-dialog">
+  <view class="detail-dialog detail-dialog--{{detail.type}}" catchtap="stopPropagation">
+    <view class="detail-close" bindtap="closeDetail" role="button" aria-label="关闭详情">
+      <text class="detail-close__icon">×</text>
+    </view>
+    <scroll-view class="detail-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="detail-header">
+        <text
+          wx:if="{{detail.headerSymbol}}"
+          class="detail-header__symbol"
+          style="color: {{detail.headerColor}};"
+        >{{detail.headerSymbol}}</text>
+        <text class="detail-header__title">{{detail.title}}</text>
+      </view>
+
+      <view class="detail-meta">
+        <view wx:for="{{detail.rows}}" wx:key="index" class="detail-row">
+          <text class="detail-row__label">{{item.label}}</text>
+          <text wx:if="{{item.prefix}}">{{item.prefix}}</text>
+          <text
+            wx:if="{{item.symbol}}"
+            class="detail-row__symbol"
+            style="color: {{item.color}};"
+          >{{item.symbol}}</text>
+          <text class="detail-row__text">{{item.text}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{detail.sectionTitle}}" class="detail-section-title">{{detail.sectionTitle}}</view>
+      <view wx:if="{{detail.items.length}}" class="detail-list">
+        <view wx:for="{{detail.items}}" wx:key="index" class="detail-row detail-list__row">
+          <text wx:if="{{item.prefix}}">{{item.prefix}}</text>
+          <text
+            wx:if="{{item.symbol}}"
+            class="detail-row__symbol"
+            style="color: {{item.color}};"
+          >{{item.symbol}}</text>
+          <text class="detail-row__text">{{item.text}}</text>
+        </view>
+      </view>
+      <text wx:else class="detail-empty">{{detail.emptyText}}</text>
+      <text wx:if="{{detail.note}}" class="detail-note">{{detail.note}}</text>
+    </scroll-view>
+  </view>
+</template>
+
+<view class="astrolabe">
+  <view class="chart-ratio">
+    <canvas
+      id="astrolabe-canvas"
+      class="chart-canvas"
+      type="2d"
+      bindtouchend="handleCanvasDetailTap"
+      aria-label="本命盘"
+    ></canvas>
+    <view
+      wx:if="{{detail.visible}}"
+      class="detail-layer"
+      bindtap="closeDetail"
+      catchtouchmove="stopPropagation"
+    >
+      <template is="detail-dialog" data="{{detail: detail}}" />
+    </view>
+  </view>
+
+  <view class="style-panel">
+    <view class="style-section">
+      <text class="section-title">皮肤</text>
+      <view class="theme-options">
+        <button
+          wx:for="{{themeOptions}}"
+          wx:key="value"
+          class="theme-option {{theme === item.value ? 'theme-option--active' : ''}}"
+          data-theme="{{item.value}}"
+          bindtap="selectTheme"
+          aria-label="切换为{{item.label}}皮肤"
+        >
+          <view class="theme-swatch theme-swatch--{{item.value}}">
+            <view class="theme-swatch__inner"></view>
+            <view wx:if="{{theme === item.value}}" class="theme-swatch__check">✓</view>
+          </view>
+          <text class="theme-option__label">{{item.label}}</text>
+        </button>
+      </view>
+    </view>
+
+    <view class="style-section style-section--display">
+      <text class="section-title">样式</text>
+      <view class="display-options">
+        <button
+          wx:for="{{displayOptions}}"
+          wx:key="value"
+          class="display-option {{zodiacStyle === item.value ? 'display-option--active' : ''}}"
+          data-style="{{item.value}}"
+          bindtap="selectZodiacStyle"
+          aria-label="切换为{{item.label}}样式"
+        >{{item.label}}</button>
+      </view>
+    </view>
+  </view>
+
+</view>
