@@ -1,0 +1,60 @@
+<!-- pages/live-preview/index.wxml -->
+<view class="live-preview-page">
+  <view class="detail-card">
+    <view class="poster">
+      <view class="poster-orbit poster-orbit--large"></view>
+      <view class="poster-orbit poster-orbit--small"></view>
+      <view class="poster-spark poster-spark--one">✦</view>
+      <view class="poster-spark poster-spark--two">✦</view>
+      <view class="poster-spark poster-spark--three">·</view>
+
+      <view class="poster-center">
+        <view class="poster-title">
+          <text class="poster-title__accent">天赋</text>
+          <text class="poster-title__main">探索报告</text>
+        </view>
+        <text class="poster-tag">事业方向・情感特质测评</text>
+      </view>
+
+      <view class="poster-footer">
+        <view class="poster-ribbon">
+          <text>一份报告</text>
+          <text>读懂自己</text>
+        </view>
+        <text class="poster-footer__copy">解锁你的事业天赋与情感模式</text>
+      </view>
+    </view>
+
+    <view class="live-info">
+      <text class="live-title">这是一个直播名称</text>
+      <text class="live-description">这是直播详情介绍，这里将为你讲解如何从个人特质中发现优势，理解事业方向与情感模式，并找到更适合自己的成长节奏。</text>
+
+      <view class="dashed-divider"></view>
+
+      <view class="meta-list">
+        <view class="meta-row">
+          <text class="meta-label">直播时间：</text>
+          <text class="meta-value" user-select="true">2026年11月03日 晚上19:00</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">直播链接：</text>
+          <text class="meta-value meta-value--link" user-select="true">xxxxxxxxxxxxxxxx</text>
+        </view>
+      </view>
+    </view>
+
+    <rich-text
+      class="notice-copy"
+      nodes="{{noticeNodes}}"
+    />
+
+    <view class="action-area">
+      <button class="action-button action-button--reserve" hover-class="action-button--pressed">预约直播</button>
+      <button
+        class="action-button action-button--share"
+        hover-class="action-button--pressed"
+        open-type="share"
+      >分享直播</button>
+    </view>
+  </view>
+</view>

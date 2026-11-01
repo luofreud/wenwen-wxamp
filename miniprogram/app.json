@@ -3,7 +3,10 @@
     "pages/index/index",
     "pages/logs/logs",
     "pages/mine/index",
-    "pages/star-chart/index"
+    "pages/star-chart/index",
+    "pages/live-preview/index",
+    "pages/archives/index",
+    "pages/archives/edit"
   ],
   "window": {
     "navigationBarTextStyle": "black",

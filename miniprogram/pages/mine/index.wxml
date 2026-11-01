@@ -100,7 +100,11 @@
   </view>
 
   <view class="feature-grid">
-    <view class="feature-card feature-card--profile" hover-class="feature-card--pressed">
+    <navigator
+      class="feature-card feature-card--profile"
+      url="/pages/archives/index"
+      hover-class="feature-card--pressed"
+    >
       <view class="feature-icon feature-icon--folder" aria-hidden="true">
         <view class="folder-shape"></view>
       </view>
@@ -109,7 +113,7 @@
         <text class="feature-subtitle">完善出生信息</text>
       </view>
       <view class="feature-arrow" aria-hidden="true"></view>
-    </view>
+    </navigator>
 
     <view class="feature-card feature-card--report" hover-class="feature-card--pressed">
       <view class="feature-icon feature-icon--report" aria-hidden="true">

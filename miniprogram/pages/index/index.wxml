@@ -63,7 +63,11 @@
         </view>
         <text class="reservation-count">210人已预约</text>
       </view>
-      <button class="reserve-button" hover-class="reserve-button--pressed">去预约</button>
+      <navigator
+        class="reserve-button"
+        url="/pages/live-preview/index"
+        hover-class="reserve-button--pressed"
+      >去预约</navigator>
     </view>
   </view>
 

@@ -1,0 +1,118 @@
+<!-- pages/archives/index.wxml -->
+<view wx:if="{{navigationReady}}" class="archives-page">
+  <view
+    class="custom-navigation"
+    style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
+  >
+    <view
+      class="navigation-content"
+      style="padding-right: {{navigationRightPadding}}px;"
+    >
+      <navigator
+        class="back-action"
+        open-type="navigateBack"
+        delta="1"
+        hover-class="navigation-action--pressed"
+        aria-label="返回"
+      >
+        <view class="back-icon"></view>
+      </navigator>
+      <text class="navigation-title">我的档案</text>
+      <navigator
+        class="add-action"
+        url="/pages/archives/edit"
+        hover-class="navigation-action--pressed"
+      >添加档案</navigator>
+    </view>
+  </view>
+
+  <view wx:if="{{showHint}}" class="swipe-hint">
+    <text class="swipe-hint__text">向左滑动可以删除档案</text>
+    <view
+      class="close-action"
+      bindtap="dismissHint"
+      hover-class="close-action--pressed"
+      role="button"
+      aria-label="关闭提示"
+    >
+      <view class="close-icon"></view>
+    </view>
+  </view>
+
+  <view class="archive-list">
+    <navigator
+      wx:for="{{archives}}"
+      wx:key="name"
+      class="archive-card"
+      url="/pages/archives/edit"
+      hover-class="archive-card--pressed"
+    >
+      <view class="archive-copy">
+        <view class="archive-heading">
+          <text class="archive-name">{{item.name}}</text>
+          <text class="archive-relation">({{item.relation}})</text>
+          <view class="zodiac-tag zodiac-tag--{{item.tone}}">
+            <text class="zodiac-symbol">{{item.symbol}}</text>
+            <text>{{item.zodiac}}</text>
+          </view>
+        </view>
+        <text class="archive-date">{{item.date}}</text>
+      </view>
+      <view
+        class="edit-action"
+        role="img"
+        aria-label="编辑{{item.name}}档案"
+      >
+        <view class="edit-icon"></view>
+      </view>
+    </navigator>
+
+    <scroll-view
+      wx:if="{{thirdArchiveVisible}}"
+      class="swipe-archive"
+      scroll-x="{{true}}"
+      enhanced="{{true}}"
+      show-scrollbar="{{false}}"
+      scroll-with-animation="{{true}}"
+      scroll-left="{{thirdArchiveScrollLeft}}"
+      bindscroll="handleArchiveScroll"
+      bindtouchend="settleArchiveSwipe"
+    >
+      <view class="swipe-track">
+        <navigator
+          class="archive-card archive-card--swipe"
+          url="/pages/archives/edit"
+          hover-class="archive-card--pressed"
+        >
+          <view class="archive-copy">
+            <view class="archive-heading">
+              <text class="archive-name">翩</text>
+              <text class="archive-relation">(家人)</text>
+              <view class="zodiac-tag zodiac-tag--orange">
+                <text class="zodiac-symbol">♉</text>
+                <text>金牛座</text>
+              </view>
+            </view>
+            <text class="archive-date">/01/20 10:50</text>
+          </view>
+          <view
+            class="edit-action"
+            role="img"
+            aria-label="编辑翩的档案"
+          >
+            <view class="edit-icon"></view>
+          </view>
+        </navigator>
+        <view
+          class="delete-action"
+          bindtap="deleteThirdArchive"
+          hover-class="delete-action--pressed"
+          role="button"
+          aria-label="删除翩的档案"
+        >
+          <text>删除</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
