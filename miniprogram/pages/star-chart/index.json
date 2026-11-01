@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "星图",
+  "usingComponents": {
+    "astrological-chart": "/components/astrological-chart/index"
+  }
+}

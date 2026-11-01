@@ -1,11 +1,35 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/logs/logs"
+    "pages/logs/logs",
+    "pages/mine/index",
+    "pages/star-chart/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "/assets/tabbar/home.png",
+        "selectedIconPath": "/assets/tabbar/home-selected.png"
+      },
+      {
+        "pagePath": "pages/star-chart/index",
+        "text": "星图",
+        "iconPath": "/assets/tabbar/star-chart.png",
+        "selectedIconPath": "/assets/tabbar/star-chart-selected.png"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的",
+        "iconPath": "/assets/tabbar/mine.png",
+        "selectedIconPath": "/assets/tabbar/mine-selected.png"
+      }
+    ]
   },
   "style": "v2",
   "rendererOptions": {

@@ -1,0 +1,128 @@
+<!-- pages/mine/index.wxml -->
+<view
+  wx:if="{{navigationReady}}"
+  class="mine-page"
+>
+  <view
+    class="navigation-bar"
+    style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
+  >
+    <image
+      class="navigation-title"
+      src="/assets/images/title-bar.png"
+      mode="scaleToFill"
+      aria-label="问问星座"
+    />
+  </view>
+
+  <view class="profile-card">
+    <view class="avatar-wrap">
+      <image
+        class="avatar"
+        src="/assets/images/avatar.png"
+        mode="aspectFit"
+        aria-label="默认头像"
+      />
+    </view>
+    <view class="profile-copy">
+      <text class="profile-name">未登录</text>
+      <text class="profile-tip">登录后解锁你的专属星盘</text>
+    </view>
+    <view class="chevron" aria-hidden="true"></view>
+  </view>
+
+  <view class="checkin-card">
+    <view class="checkin-head">
+      <view class="checkin-heading">
+        <view class="reward-icon" aria-hidden="true">
+          <view class="reward-icon__spark">✦</view>
+        </view>
+        <view class="checkin-copy">
+          <text class="checkin-title">签到领奖励</text>
+          <text class="checkin-subtitle">连续签到7天可以获得额外奖励！</text>
+        </view>
+      </view>
+      <button class="checkin-button" hover-class="checkin-button--pressed">签到</button>
+    </view>
+
+    <view class="checkin-grid">
+      <view class="day-card day-card--today">
+        <text class="day-label">今天</text>
+        <view class="coin" aria-hidden="true"><text>★</text></view>
+        <text class="reward-number">+1</text>
+      </view>
+      <view class="day-card">
+        <text class="day-label">第二天</text>
+        <view class="coin" aria-hidden="true"><text>★</text></view>
+        <text class="reward-number">+1</text>
+      </view>
+      <view class="day-card">
+        <text class="day-label">第三天</text>
+        <view class="coin" aria-hidden="true"><text>★</text></view>
+        <text class="reward-number">+2</text>
+      </view>
+      <view class="day-card">
+        <text class="day-label">第四天</text>
+        <view class="coin" aria-hidden="true"><text>★</text></view>
+        <text class="reward-number">+2</text>
+      </view>
+      <view class="day-card">
+        <text class="day-label">第五天</text>
+        <view class="coin" aria-hidden="true"><text>★</text></view>
+        <text class="reward-number">+3</text>
+      </view>
+      <view class="day-card">
+        <text class="day-label">第六天</text>
+        <view class="coin" aria-hidden="true"><text>★</text></view>
+        <text class="reward-number">+3</text>
+      </view>
+      <view class="day-card day-card--bonus">
+        <view class="bonus-coin">
+          <text class="day-label">第七天</text>
+          <view class="coin coin--large" aria-hidden="true"><text>★</text></view>
+          <text class="reward-number">+5</text>
+        </view>
+        <view class="bonus-coupon">
+          <view class="gift" aria-hidden="true">
+            <view class="gift__bow"></view>
+            <view class="gift__box"></view>
+          </view>
+          <text class="coupon-text">免单券</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="notice-banner">
+    <view class="notice-icon" aria-hidden="true">!</view>
+    <text class="notice-text">七日签到的免单券只能在app使用哦</text>
+    <view class="notice-arrow" aria-hidden="true"></view>
+  </view>
+
+  <view class="feature-grid">
+    <view class="feature-card feature-card--profile" hover-class="feature-card--pressed">
+      <view class="feature-icon feature-icon--folder" aria-hidden="true">
+        <view class="folder-shape"></view>
+      </view>
+      <view class="feature-copy">
+        <text class="feature-title">个人档案</text>
+        <text class="feature-subtitle">完善出生信息</text>
+      </view>
+      <view class="feature-arrow" aria-hidden="true"></view>
+    </view>
+
+    <view class="feature-card feature-card--report" hover-class="feature-card--pressed">
+      <view class="feature-icon feature-icon--report" aria-hidden="true">
+        <view class="report-shape">
+          <view class="report-line report-line--long"></view>
+          <view class="report-line"></view>
+        </view>
+      </view>
+      <view class="feature-copy">
+        <text class="feature-title">我的报告</text>
+        <text class="feature-subtitle">查看星座解读</text>
+      </view>
+      <view class="feature-arrow" aria-hidden="true"></view>
+    </view>
+  </view>
+</view>

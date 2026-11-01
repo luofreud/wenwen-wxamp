@@ -1,0 +1,75 @@
+<!-- pages/star-chart/index.wxml -->
+<view wx:if="{{navigationReady}}" class="star-chart-page">
+  <view
+    class="navigation-bar"
+    style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
+  >
+    <image
+      class="navigation-title"
+      style="right: {{titleBarRight}}px;"
+      src="/assets/images/title-bar.png"
+      mode="scaleToFill"
+      aria-label="问问星座"
+    />
+  </view>
+
+  <view class="page-heading">
+    <text class="page-title">一个了不起的名字</text>
+    <view class="heading-actions">
+      <view class="icon-button" hover-class="icon-button--pressed" role="button" aria-label="切换用户">
+        <image class="heading-icon" src="/assets/icons/switch.png" mode="aspectFit" />
+      </view>
+      <button
+        class="icon-button"
+        hover-class="icon-button--pressed"
+        open-type="share"
+        aria-label="分享星盘"
+      >
+        <image class="heading-icon" src="/assets/icons/share.png" mode="aspectFit" />
+      </button>
+    </view>
+  </view>
+
+  <view class="chart-shell">
+    <astrological-chart />
+  </view>
+
+  <view class="notice-banner">
+    <image class="notice-icon" src="/assets/icons/warn.png" mode="aspectFit" aria-hidden="true" />
+    <text class="notice-text">当前内容为免费内容，仅供您在娱乐中探索自我，无任何现实指导意义。</text>
+  </view>
+
+  <view class="section-heading">
+    <image
+      class="section-title-image"
+      src="/assets/images/subtitle.png"
+      mode="widthFix"
+      aria-label="本命盘解读"
+    />
+  </view>
+
+  <view class="interpretation-list">
+    <view
+      wx:for="{{interpretations}}"
+      wx:key="title"
+      class="interpretation-card"
+    >
+      <view class="card-title-row">
+        <view class="astro-symbol astro-symbol--{{item.tone}}" aria-hidden="true">{{item.symbol}}</view>
+        <text class="card-title">{{item.title}}</text>
+      </view>
+      <text class="card-subtitle">{{item.subtitle}}</text>
+      <text class="card-summary">
+        {{item.summary}}
+        <text class="read-more">全文</text>
+      </text>
+    </view>
+  </view>
+
+  <view class="bottom-spacer"></view>
+  <view class="bottom-action">
+    <button class="unlock-button" hover-class="unlock-button--pressed">
+      去问问app解锁完整本命解读
+    </button>
+  </view>
+</view>
