@@ -15,7 +15,32 @@
     />
   </view>
 
-  <view class="profile-card">
+  <view wx:if="{{isProfileLoading}}" class="profile-card profile-card--loading">
+    <view class="profile-skeleton profile-skeleton--avatar"></view>
+    <view class="profile-skeleton-copy">
+      <view class="profile-skeleton profile-skeleton--name"></view>
+      <view class="profile-skeleton profile-skeleton--tip"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{profileError}}" class="profile-card profile-card--error">
+    <view class="profile-error-icon">!</view>
+    <view class="profile-copy">
+      <text class="profile-name profile-name--error">资料暂时没有加载出来</text>
+      <text class="profile-tip">{{profileError}}</text>
+    </view>
+    <button class="profile-retry" bindtap="retryProfile">重试</button>
+  </view>
+
+  <button
+    wx:elif="{{isProfileEmpty}}"
+    class="profile-card profile-card--authorize"
+    open-type="getUserInfo"
+    bindgetuserinfo="handleGetUserInfo"
+    loading="{{isProfileUpdating}}"
+    disabled="{{isProfileUpdating}}"
+    hover-class="profile-card--pressed"
+  >
     <view class="avatar-wrap">
       <image
         class="avatar"
@@ -25,10 +50,32 @@
       />
     </view>
     <view class="profile-copy">
-      <text class="profile-name">未登录</text>
-      <text class="profile-tip">登录后解锁你的专属星盘</text>
+      <text class="profile-name">同步微信资料</text>
+      <text class="profile-tip">授权头像和昵称，完善你的星友身份</text>
     </view>
-    <view class="chevron" aria-hidden="true"></view>
+  </button>
+
+  <view wx:else class="profile-card">
+    <view class="avatar-wrap">
+      <image
+        class="avatar avatar--user"
+        src="{{profile.avatar || '/assets/images/avatar.png'}}"
+        mode="aspectFill"
+        aria-label="用户头像"
+      />
+    </view>
+    <view class="profile-copy">
+      <text class="profile-name">{{profile.nickname || '星友'}}</text>
+      <text class="profile-tip">{{profileZodiac ? '星座 · ' + profileZodiac : '欢迎来到问问星座'}}</text>
+    </view>
+    <button
+      wx:if="{{needsWechatInfo}}"
+      class="profile-sync"
+      open-type="getUserInfo"
+      bindgetuserinfo="handleGetUserInfo"
+      loading="{{isProfileUpdating}}"
+      disabled="{{isProfileUpdating}}"
+    >同步资料</button>
   </view>
 
   <view class="checkin-card">

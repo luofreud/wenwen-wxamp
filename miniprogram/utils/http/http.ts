@@ -6,9 +6,11 @@ interface ApiResponse<T> {
   data: T
 }
 
+type HttpMethod = WechatMiniprogram.RequestOption['method'] | 'PATCH'
+
 interface HttpParams {
   url: string
-  method?: WechatMiniprogram.RequestOption['method']
+  method?: HttpMethod
   params?: Record<string, unknown>
   header?: Record<string, string>
 }
@@ -68,7 +70,7 @@ const http = <T = unknown>({
 }: HttpParams): Promise<ApiResponse<T>> => {
   return client.request<ApiResponse<T>>({
     url,
-    method,
+    method: method as WechatMiniprogram.RequestOption['method'],
     header: {
       'content-type': 'application/json',
       ...header,
@@ -81,4 +83,4 @@ const http = <T = unknown>({
 const logout = (): Promise<void> => client.logout()
 
 export { http, logout }
-export type { ApiResponse, HttpParams }
+export type { ApiResponse, HttpMethod, HttpParams }
