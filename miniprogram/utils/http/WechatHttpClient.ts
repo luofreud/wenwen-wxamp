@@ -7,46 +7,64 @@ type ResponseInterceptor = (response: unknown) => unknown | Promise<unknown>
 
 interface WechatRequestConfig {
   baseUrl: string
-  getTokenUrl: string
-  maxRefreshAttempts?: number
+  loginUrl: string
+  refreshUrl: string
+  logoutUrl: string
 }
 
-interface TokenResponse {
+interface ApiResponse {
   code?: string | number
-  data?: {
-    token?: unknown
-  }
+  msg?: unknown
+  data?: unknown
 }
 
-interface BusinessResponse {
-  code?: string | number
+interface AuthData {
+  access_token?: unknown
+  refresh_token?: unknown
+}
+
+interface AuthTokens {
+  accessToken: string
+  refreshToken: string
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
 
-const isTokenResponse = (value: unknown): value is TokenResponse => {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  return value.data === undefined || isRecord(value.data)
+const toApiResponse = (value: unknown): ApiResponse | null => {
+  return isRecord(value) ? value : null
 }
 
-const isBusinessResponse = (value: unknown): value is BusinessResponse => {
-  return isRecord(value)
+const toAuthTokens = (value: unknown): AuthTokens | null => {
+  const response = toApiResponse(value)
+  if (!response || String(response.code) !== '200' || !isRecord(response.data)) {
+    return null
+  }
+
+  const data: AuthData = response.data
+  if (
+    typeof data.access_token !== 'string' ||
+    typeof data.refresh_token !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+  }
 }
 
 /**
- * 微信小程序 HTTP 客户端，负责登录、token 注入及失效后的自动刷新。
+ * 微信小程序 HTTP 客户端，负责登录、Bearer token 注入及 401 后的会话恢复。
  */
 export default class WechatHttpClient {
   private static instance: WechatHttpClient | null = null
 
-  private token: string | null = null
-  private refreshPromise: Promise<void> | null = null
-  private refreshAttemptCount = 0
+  private accessToken: string | null = null
+  private refreshToken: string | null = null
+  private authenticationPromise: Promise<void> | null = null
   private requestInterceptors: RequestInterceptor[] = []
   private responseInterceptors: ResponseInterceptor[] = []
 
@@ -64,32 +82,34 @@ export default class WechatHttpClient {
     return WechatHttpClient.instance
   }
 
-  private getToken(code: string): Promise<string> {
+  private requestAuthTokens(
+    url: string,
+    data: Record<string, unknown>,
+  ): Promise<AuthTokens> {
     return new Promise((resolve, reject) => {
       wx.request({
-        url: `${this.config.baseUrl}${this.config.getTokenUrl}`,
+        url: `${this.config.baseUrl}${url}`,
         method: 'POST',
-        data: { code },
+        data,
         success: (response) => {
-          const result = response.data
-
-          if (
-            isTokenResponse(result) &&
-            String(result.code) === '10000' &&
-            typeof result.data?.token === 'string'
-          ) {
-            resolve(result.data.token)
+          const tokens = toAuthTokens(response.data)
+          if (tokens) {
+            resolve(tokens)
             return
           }
 
-          reject(new Error('Failed to retrieve token'))
+          const result = toApiResponse(response.data)
+          const message = typeof result?.msg === 'string'
+            ? result.msg
+            : 'Authentication failed'
+          reject(new Error(message))
         },
         fail: reject,
       })
     })
   }
 
-  private login(): Promise<string> {
+  private getLoginCode(): Promise<string> {
     return new Promise((resolve, reject) => {
       wx.login({
         success: ({ code }) => {
@@ -105,28 +125,67 @@ export default class WechatHttpClient {
     })
   }
 
-  private refreshToken(): Promise<void> {
-    if (this.refreshPromise) {
-      return this.refreshPromise
+  private saveTokens(tokens: AuthTokens): void {
+    this.accessToken = tokens.accessToken
+    this.refreshToken = tokens.refreshToken
+  }
+
+  private clearTokens(): void {
+    this.accessToken = null
+    this.refreshToken = null
+  }
+
+  private login(): Promise<void> {
+    return this.getLoginCode()
+      .then((code) => this.requestAuthTokens(this.config.loginUrl, { code }))
+      .then((tokens) => this.saveTokens(tokens))
+  }
+
+  private refresh(): Promise<void> {
+    const currentRefreshToken = this.refreshToken
+    if (!currentRefreshToken) {
+      return Promise.reject(new Error('No refresh token available'))
     }
 
-    const maxAttempts = this.config.maxRefreshAttempts ?? 2
-    if (this.refreshAttemptCount >= maxAttempts) {
-      return Promise.reject(new Error('Exceeded max token refresh attempts'))
+    return this.requestAuthTokens(this.config.refreshUrl, {
+      refresh_token: currentRefreshToken,
+    }).then((tokens) => this.saveTokens(tokens))
+  }
+
+  private runAuthentication(action: () => Promise<void>): Promise<void> {
+    if (this.authenticationPromise) {
+      return this.authenticationPromise
     }
 
-    this.refreshAttemptCount += 1
-    this.refreshPromise = this.login()
-      .then((code) => this.getToken(code))
-      .then((token) => {
-        this.token = token
-        this.refreshAttemptCount = 0
-      })
-      .finally(() => {
-        this.refreshPromise = null
-      })
+    this.authenticationPromise = action().finally(() => {
+      this.authenticationPromise = null
+    })
 
-    return this.refreshPromise
+    return this.authenticationPromise
+  }
+
+  private ensureAuthenticated(): Promise<void> {
+    if (this.accessToken) {
+      return Promise.resolve()
+    }
+
+    return this.runAuthentication(() => this.login())
+  }
+
+  private recoverAuthentication(): Promise<void> {
+    return this.runAuthentication(async () => {
+      try {
+        await this.refresh()
+      } catch {
+        this.clearTokens()
+        await this.login()
+      }
+    })
+  }
+
+  private isUnauthorized(response: RequestResponse): boolean {
+    const result = toApiResponse(response.data)
+    return response.statusCode === 401 || String(result?.code) === '401'
   }
 
   async request<T = unknown>(initialOptions: RequestOptions): Promise<T> {
@@ -136,15 +195,14 @@ export default class WechatHttpClient {
       options = await interceptor(options)
     }
 
-    if (!this.token) {
-      await this.refreshToken()
-    }
+    await this.ensureAuthenticated()
 
-    const doRequest = (hasRefreshed = false): Promise<T> => {
+    const doRequest = (hasRecovered = false): Promise<T> => {
       return new Promise((resolve, reject) => {
+        const requestAccessToken = this.accessToken
         const header = { ...options.header }
-        if (this.token) {
-          header.token = this.token
+        if (requestAccessToken) {
+          header.Authorization = `Bearer ${requestAccessToken}`
         }
 
         wx.request({
@@ -152,17 +210,23 @@ export default class WechatHttpClient {
           url: `${this.config.baseUrl}${options.url}`,
           header,
           success: (response: RequestResponse) => {
-            if (
-              isBusinessResponse(response.data) &&
-              String(response.data.code) === '40001'
-            ) {
-              if (hasRefreshed) {
-                reject(new Error('Token remains invalid after refresh'))
+            if (this.isUnauthorized(response)) {
+              if (hasRecovered) {
+                this.clearTokens()
+                reject(new Error('Authentication failed after session recovery'))
                 return
               }
 
-              this.token = null
-              this.refreshToken()
+              if (
+                this.accessToken &&
+                requestAccessToken !== this.accessToken
+              ) {
+                doRequest(true).then(resolve, reject)
+                return
+              }
+
+              this.accessToken = null
+              this.recoverAuthentication()
                 .then(() => doRequest(true))
                 .then(resolve, reject)
               return
@@ -179,6 +243,45 @@ export default class WechatHttpClient {
     }
 
     return doRequest()
+  }
+
+  async logout(): Promise<void> {
+    if (!this.accessToken || !this.refreshToken) {
+      this.clearTokens()
+      return
+    }
+
+    const accessToken = this.accessToken
+    const refreshToken = this.refreshToken
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        wx.request({
+          url: `${this.config.baseUrl}${this.config.logoutUrl}`,
+          method: 'POST',
+          header: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          data: {
+            refresh_token: refreshToken,
+          },
+          success: (response) => {
+            const result = toApiResponse(response.data)
+            if (String(result?.code) === '200') {
+              resolve()
+              return
+            }
+
+            reject(new Error(
+              typeof result?.msg === 'string' ? result.msg : 'Logout failed',
+            ))
+          },
+          fail: reject,
+        })
+      })
+    } finally {
+      this.clearTokens()
+    }
   }
 
   private async applyResponseInterceptors(response: RequestResponse): Promise<unknown> {

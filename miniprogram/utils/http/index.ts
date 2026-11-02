@@ -1,1 +1,2 @@
-export { http } from './http'
+export { http, logout } from './http'
+export type { ApiResponse, HttpParams } from './http'

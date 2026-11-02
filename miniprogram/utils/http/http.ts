@@ -1,37 +1,27 @@
 import WechatHttpClient from './WechatHttpClient'
 
-interface ApiResponse {
-  code?: string | number
-  message?: unknown
+interface ApiResponse<T> {
+  code: number
+  msg: string
+  data: T
 }
 
 interface HttpParams {
   url: string
-  params: Record<string, unknown>
+  method?: WechatMiniprogram.RequestOption['method']
+  params?: Record<string, unknown>
+  header?: Record<string, string>
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
 
-const { appId } = wx.getAccountInfoSync().miniProgram
-
 const client = WechatHttpClient.getInstance({
-  baseUrl: 'http://localhost:5000',
-  getTokenUrl: '/login',
-  maxRefreshAttempts: 2,
-})
-
-client.addRequestInterceptor((options) => {
-  const data = isRecord(options.data) ? options.data : {}
-
-  return {
-    ...options,
-    data: {
-      ...data,
-      appId,
-    },
-  }
+  baseUrl: 'http://localhost:5000/api/wechat/v1',
+  loginUrl: '/auth/login',
+  refreshUrl: '/auth/refresh',
+  logoutUrl: '/auth/logout',
 })
 
 client.addResponseInterceptor((result) => {
@@ -40,11 +30,13 @@ client.addResponseInterceptor((result) => {
   }
 
   const data: unknown = result.data
-  const response: ApiResponse = isRecord(data) ? data : {}
+  if (!isRecord(data)) {
+    return data
+  }
 
-  if (String(response.code) !== '200') {
+  if (String(data.code) !== '200') {
     wx.showToast({
-      title: typeof response.message === 'string' ? response.message : '请求失败',
+      title: typeof data.msg === 'string' ? data.msg : '请求失败',
       icon: 'none',
     })
   }
@@ -53,29 +45,40 @@ client.addResponseInterceptor((result) => {
 })
 
 /**
- * 发送 POST 请求。
+ * 发送微信小程序 API 请求，默认使用 GET。
  *
  * @example
  * ```ts
- * const result = await http<UserInfo>({
- *   url: '/info',
- *   params: {
- *     testNo: '09001',
- *   },
+ * const result = await http<UserInfo[]>({
+ *   url: '/archives',
+ * })
+ *
+ * const created = await http<UserInfo>({
+ *   url: '/archives',
+ *   method: 'POST',
+ *   params: formData,
  * })
  * ```
  */
-const http = <T = unknown>({ url, params }: HttpParams): Promise<T> => {
-  return client.request<T>({
+const http = <T = unknown>({
+  url,
+  method = 'GET',
+  params,
+  header,
+}: HttpParams): Promise<ApiResponse<T>> => {
+  return client.request<ApiResponse<T>>({
     url,
-    method: 'POST',
+    method,
     header: {
       'content-type': 'application/json',
-      appId,
+      ...header,
     },
     data: params,
     dataType: 'json',
   })
 }
 
-export { http }
+const logout = (): Promise<void> => client.logout()
+
+export { http, logout }
+export type { ApiResponse, HttpParams }
