@@ -4,10 +4,13 @@ import {
 } from '../../services/index'
 import type { LiveEvent } from '../../services/index'
 
-// 配置直播提醒模板 ID 后，预约前会自动申请最多两份订阅授权。
-const LIVE_REMINDER_TEMPLATE_IDS: string[] = []
+// 预约前申请直播提醒订阅授权；后续可追加第二个提醒模板。
+const LIVE_REMINDER_TEMPLATE_IDS = [
+  'EdGu2lM-BKrA3-cXAxaH0jJpv6N31yWaJ4lxjqHYCSU',
+]
 
-const getAcceptedSubscriptionCount = (): Promise<0 | 1 | 2> => {
+// 当前模板同意一次对应开播前两次提醒，因此同意时向服务端声明 2 次。
+const getAcceptedSubscriptionCount = (): Promise<0 | 2> => {
   const templateIds = LIVE_REMINDER_TEMPLATE_IDS.slice(0, 2)
   if (templateIds.length === 0) {
     return Promise.resolve(0)
@@ -17,11 +20,11 @@ const getAcceptedSubscriptionCount = (): Promise<0 | 1 | 2> => {
     wx.requestSubscribeMessage({
       tmplIds: templateIds,
       success: (result) => {
-        const count = templateIds.filter((templateId) => {
+        const hasAccepted = templateIds.some((templateId) => {
           return result[templateId] === 'accept'
-        }).length
+        })
 
-        resolve(count >= 2 ? 2 : count === 1 ? 1 : 0)
+        resolve(hasAccepted ? 2 : 0)
       },
       fail: () => resolve(0),
     })

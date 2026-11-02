@@ -1,10 +1,30 @@
 // pages/index/index.ts
-import { getLiveEvents } from '../../services/index'
-import type { LiveEvent } from '../../services/index'
+import { getAssessmentTypes, getLiveEvents } from '../../services/index'
+import type { AssessmentType, LiveEvent } from '../../services/index'
 
 interface HomeLiveEvent extends LiveEvent {
   detailUrl: string
 }
+
+interface FeaturedAssessment extends AssessmentType {
+  image: string
+}
+
+interface MoreAssessment extends AssessmentType {
+  tone: 'violet' | 'blue' | 'rose'
+}
+
+const FEATURED_REPORT_IMAGES = [
+  '/assets/images/report-01.png',
+  '/assets/images/report-02.png',
+  '/assets/images/report-03.png',
+]
+
+const MORE_REPORT_TONES: MoreAssessment['tone'][] = [
+  'violet',
+  'blue',
+  'rose',
+]
 
 Page({
   data: {
@@ -23,40 +43,8 @@ Page({
       { icon: '', value: '藏红色', label: '幸运色', tone: 'color' },
       { icon: '6', value: '数字 6', label: '幸运数', tone: 'number' },
     ],
-    reports: [
-      {
-        title: '天赋财富运势报告',
-        description: '本命特质、天赋与财运，一份报告读懂自己。',
-        image: '/assets/images/report-01.png',
-      },
-      {
-        title: '本命500万财富在哪里？',
-        description: '拆解你的财富地图，找到更适合自己的方向。',
-        image: '/assets/images/report-02.png',
-      },
-      {
-        title: '未来伴侣具体什么样？',
-        description: '从星盘线索，看见亲密关系中的理想模样。',
-        image: '/assets/images/report-03.png',
-      },
-    ],
-    moreReports: [
-      {
-        title: '未来一年机会在哪里？',
-        description: '梳理未来一年的重要节点，把握属于你的成长机会。',
-        tone: 'violet',
-      },
-      {
-        title: '隐藏的天赋怎么激发？',
-        description: '找到被忽略的闪光点，让潜力成为真实的能力。',
-        tone: 'blue',
-      },
-      {
-        title: '去哪里发展更适合我？',
-        description: '从性格与环境偏好出发，探索更舒服的发展方向。',
-        tone: 'rose',
-      },
-    ],
+    reports: [] as FeaturedAssessment[],
+    moreReports: [] as MoreAssessment[],
   },
 
   onLoad() {
@@ -68,6 +56,31 @@ Page({
       this.initNavigation()
     }
     void this.loadLiveEvent()
+    void this.loadAssessmentTypes()
+  },
+
+  async loadAssessmentTypes(): Promise<void> {
+    try {
+      const response = await getAssessmentTypes()
+      if (response.code !== 200) {
+        this.setData({ reports: [], moreReports: [] })
+        return
+      }
+
+      const assessmentTypes = response.data.slice(0, 20)
+      const reports = assessmentTypes.slice(0, 3).map((assessment, index) => ({
+        ...assessment,
+        image: FEATURED_REPORT_IMAGES[index],
+      }))
+      const moreReports = assessmentTypes.slice(3).map((assessment, index) => ({
+        ...assessment,
+        tone: MORE_REPORT_TONES[index % MORE_REPORT_TONES.length],
+      }))
+
+      this.setData({ reports, moreReports })
+    } catch {
+      this.setData({ reports: [], moreReports: [] })
+    }
   },
 
   async loadLiveEvent(): Promise<void> {

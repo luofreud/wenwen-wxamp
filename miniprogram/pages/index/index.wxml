@@ -74,10 +74,10 @@
     aria-label="问问星座APP，真人专业解析"
   />
 
-  <view class="report-list">
+  <view wx:if="{{reports.length > 0}}" class="report-list">
     <view
       wx:for="{{reports}}"
-      wx:key="title"
+      wx:key="type_code"
       class="report-card"
       hover-class="content-card--pressed"
     >
@@ -89,7 +89,7 @@
     </view>
   </view>
 
-  <view class="more-section">
+  <view wx:if="{{moreReports.length > 0}}" class="more-section">
     <view class="more-heading">
       <image
         class="more-title-image"
@@ -100,7 +100,7 @@
     </view>
     <view
       wx:for="{{moreReports}}"
-      wx:key="title"
+      wx:key="type_code"
       class="more-card"
       hover-class="content-card--pressed"
     >
