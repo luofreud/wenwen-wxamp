@@ -292,6 +292,16 @@ page {
   margin-top: 14rpx;
 }
 
+.live-status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  flex: none;
+  border: 3rpx solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: #ef7a62;
+  box-shadow: 0 0 0 4rpx rgba(239, 122, 98, 0.14);
+}
+
 .avatar-group {
   display: flex;
   align-items: center;
@@ -316,9 +326,13 @@ page {
 }
 
 .reservation-count {
-  margin-left: 8rpx;
+  max-width: 350rpx;
+  margin-left: 12rpx;
+  overflow: hidden;
   color: #766e7e;
   font-size: 21rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reserve-button {

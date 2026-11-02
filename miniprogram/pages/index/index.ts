@@ -1,9 +1,17 @@
 // pages/index/index.ts
+import { getLiveEvents } from '../../services/index'
+import type { LiveEvent } from '../../services/index'
+
+interface HomeLiveEvent extends LiveEvent {
+  detailUrl: string
+}
+
 Page({
   data: {
     navigationReady: false,
     navigationBarHeight: 0,
     statusBarHeight: 0,
+    liveEvent: null as HomeLiveEvent | null,
     moodBars: [
       { label: '爱情', score: 80, tone: 'love' },
       { label: '健康', score: 90, tone: 'health' },
@@ -58,6 +66,31 @@ Page({
   onShow() {
     if (!this.data.navigationReady) {
       this.initNavigation()
+    }
+    void this.loadLiveEvent()
+  },
+
+  async loadLiveEvent(): Promise<void> {
+    try {
+      const response = await getLiveEvents({
+        page: 1,
+        page_size: 1,
+      })
+
+      if (response.code !== 200 || response.data.items.length === 0) {
+        this.setData({ liveEvent: null })
+        return
+      }
+
+      const liveEvent = response.data.items[0]
+      this.setData({
+        liveEvent: {
+          ...liveEvent,
+          detailUrl: `/pages/live-preview/index?id=${encodeURIComponent(liveEvent.event_no)}`,
+        },
+      })
+    } catch {
+      this.setData({ liveEvent: null })
     }
   },
 

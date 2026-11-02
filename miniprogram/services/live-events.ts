@@ -21,6 +21,7 @@ interface LiveEvent {
   status: LiveEventStatus
   lock_version: number
   reservation_status: ReservationStatus
+  reservation_count: number
 }
 
 interface LiveEventList extends PaginationResult {

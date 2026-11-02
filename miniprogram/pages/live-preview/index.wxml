@@ -1,6 +1,23 @@
 <!-- pages/live-preview/index.wxml -->
 <view class="live-preview-page">
-  <view class="detail-card">
+  <view wx:if="{{isLoading}}" class="detail-card detail-card--loading">
+    <view class="preview-skeleton preview-skeleton--poster"></view>
+    <view class="preview-skeleton-body">
+      <view class="preview-skeleton preview-skeleton--title"></view>
+      <view class="preview-skeleton preview-skeleton--copy"></view>
+      <view class="preview-skeleton preview-skeleton--copy preview-skeleton--short"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="preview-state">
+    <view class="preview-state__orbit">!</view>
+    <text class="preview-state__title">这场直播暂时无法打开</text>
+    <text class="preview-state__copy">{{loadError}}</text>
+    <button wx:if="{{eventNo}}" class="preview-state__button" bindtap="retryLoad">重新加载</button>
+    <button class="preview-state__button preview-state__button--ghost" bindtap="goBack">返回首页</button>
+  </view>
+
+  <view wx:else class="detail-card">
     <view class="poster">
       <view class="poster-orbit poster-orbit--large"></view>
       <view class="poster-orbit poster-orbit--small"></view>
@@ -10,46 +27,60 @@
 
       <view class="poster-center">
         <view class="poster-title">
-          <text class="poster-title__accent">天赋</text>
-          <text class="poster-title__main">探索报告</text>
+          <text class="poster-title__accent">星象</text>
+          <text class="poster-title__main">直播间</text>
         </view>
-        <text class="poster-tag">事业方向・情感特质测评</text>
+        <text class="poster-tag">{{liveEvent.host_name}} · LIVE</text>
       </view>
 
       <view class="poster-footer">
         <view class="poster-ribbon">
-          <text>一份报告</text>
-          <text>读懂自己</text>
+          <text>问问星座</text>
+          <text>特别直播</text>
         </view>
-        <text class="poster-footer__copy">解锁你的事业天赋与情感模式</text>
+        <text class="poster-footer__copy">{{liveEvent.display_time_text}}</text>
       </view>
     </view>
 
     <view class="live-info">
-      <text class="live-title">这是一个直播名称</text>
-      <text class="live-description">这是直播详情介绍，这里将为你讲解如何从个人特质中发现优势，理解事业方向与情感模式，并找到更适合自己的成长节奏。</text>
+      <text class="live-title">{{liveEvent.title}}</text>
+      <text class="live-description">{{liveEvent.description}}</text>
 
       <view class="dashed-divider"></view>
 
       <view class="meta-list">
         <view class="meta-row">
           <text class="meta-label">直播时间：</text>
-          <text class="meta-value" user-select="true">2026年11月03日 晚上19:00</text>
+          <text class="meta-value" user-select="true">{{liveEvent.display_time_text}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">直播嘉宾：</text>
+          <text class="meta-value">{{liveEvent.host_name}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">预约人数：</text>
+          <text class="meta-value meta-value--count">{{liveEvent.reservation_count}} 人已预约</text>
         </view>
         <view class="meta-row">
           <text class="meta-label">直播链接：</text>
-          <text class="meta-value meta-value--link" user-select="true">xxxxxxxxxxxxxxxx</text>
+          <text class="meta-value meta-value--link" user-select="true">{{liveEvent.h5_url}}</text>
         </view>
       </view>
     </view>
 
-    <rich-text
-      class="notice-copy"
-      nodes="{{noticeNodes}}"
-    />
+    <view class="notice-copy">
+      <text class="notice-copy__accent">预约直播后，</text>
+      <text>如已授权订阅消息，将在开播前收到提醒；拒绝授权不会影响预约。</text>
+    </view>
 
     <view class="action-area">
-      <button class="action-button action-button--reserve" hover-class="action-button--pressed">预约直播</button>
+      <button
+        class="action-button action-button--reserve {{liveEvent.reservation_status === 'reserved' ? 'action-button--reserved' : ''}}"
+        hover-class="action-button--pressed"
+        loading="{{isReserving}}"
+        disabled="{{isReserving || liveEvent.reservation_status === 'reserved'}}"
+        bindtap="reserveLiveEvent"
+      >{{isReserving ? '预约中' : (liveEvent.reservation_status === 'reserved' ? '已预约' : '预约直播')}}</button>
       <button
         class="action-button action-button--share"
         hover-class="action-button--pressed"

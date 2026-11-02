@@ -1,3 +1,9 @@
 {
-  "usingComponents": {}
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f8f6fb",
+  "usingComponents": {},
+  "navigationBarTextStyle": "white",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTitleText": "直播详情",
+  "homeButton": true
 }

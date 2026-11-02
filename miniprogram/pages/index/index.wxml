@@ -51,23 +51,19 @@
     </view>
   </view>
 
-  <view class="live-card">
+  <view wx:if="{{liveEvent}}" class="live-card">
     <view class="live-copy">
-      <text class="live-title">xxxxx直播</text>
-      <text class="live-description">这是一段介绍文字这是一段介绍文字</text>
+      <text class="live-title">{{liveEvent.title}}</text>
+      <text class="live-description">{{liveEvent.description}}</text>
       <view class="reservation-row">
-        <view class="avatar-group">
-          <image class="viewer-avatar" src="/assets/images/avatar.png" mode="aspectFill" />
-          <image class="viewer-avatar viewer-avatar--second" src="/assets/images/avatar.png" mode="aspectFill" />
-          <image class="viewer-avatar viewer-avatar--third" src="/assets/images/avatar.png" mode="aspectFill" />
-        </view>
-        <text class="reservation-count">210人已预约</text>
+        <view class="live-status-dot"></view>
+        <text class="reservation-count">{{liveEvent.reservation_count}}人已预约 · {{liveEvent.display_time_text}}</text>
       </view>
       <navigator
         class="reserve-button"
-        url="/pages/live-preview/index"
+        url="{{liveEvent.detailUrl}}"
         hover-class="reserve-button--pressed"
-      >去预约</navigator>
+      >{{liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
     </view>
   </view>
 

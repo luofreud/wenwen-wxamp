@@ -1,38 +1,150 @@
-// pages/live-preview/index.ts
+import {
+  getLiveEvent,
+  reserveLiveEvent as reserveLiveEventRequest,
+} from '../../services/index'
+import type { LiveEvent } from '../../services/index'
+
+// 配置直播提醒模板 ID 后，预约前会自动申请最多两份订阅授权。
+const LIVE_REMINDER_TEMPLATE_IDS: string[] = []
+
+const getAcceptedSubscriptionCount = (): Promise<0 | 1 | 2> => {
+  const templateIds = LIVE_REMINDER_TEMPLATE_IDS.slice(0, 2)
+  if (templateIds.length === 0) {
+    return Promise.resolve(0)
+  }
+
+  return new Promise((resolve) => {
+    wx.requestSubscribeMessage({
+      tmplIds: templateIds,
+      success: (result) => {
+        const count = templateIds.filter((templateId) => {
+          return result[templateId] === 'accept'
+        }).length
+
+        resolve(count >= 2 ? 2 : count === 1 ? 1 : 0)
+      },
+      fail: () => resolve(0),
+    })
+  })
+}
+
 Page({
   data: {
-    noticeNodes: [
-      {
-        name: 'span',
-        attrs: {
-          style: 'color:#4A90E2;',
+    eventNo: '',
+    liveEvent: null as LiveEvent | null,
+    isLoading: true,
+    isReserving: false,
+    loadError: '',
+  },
+
+  onLoad(options: Record<string, string | undefined>) {
+    const eventNo = options.id?.trim() ?? ''
+    if (!eventNo) {
+      this.setData({
+        isLoading: false,
+        loadError: '缺少直播编号，无法加载直播详情。',
+      })
+      return
+    }
+
+    this.setData({ eventNo })
+    void this.loadLiveEvent()
+  },
+
+  onPullDownRefresh() {
+    void this.loadLiveEvent().finally(() => wx.stopPullDownRefresh())
+  },
+
+  async loadLiveEvent(): Promise<void> {
+    const eventNo = this.data.eventNo
+    if (!eventNo) return
+
+    this.setData({
+      isLoading: true,
+      loadError: '',
+    })
+
+    try {
+      const response = await getLiveEvent(eventNo)
+      if (response.code !== 200) {
+        this.setData({
+          liveEvent: null,
+          loadError: response.msg || '直播详情加载失败',
+        })
+        return
+      }
+
+      this.setData({ liveEvent: response.data })
+    } catch (error) {
+      this.setData({
+        liveEvent: null,
+        loadError: error instanceof Error
+          ? error.message
+          : '网络开小差了，请稍后重试。',
+      })
+    } finally {
+      this.setData({ isLoading: false })
+    }
+  },
+
+  retryLoad() {
+    void this.loadLiveEvent()
+  },
+
+  goBack() {
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack()
+      return
+    }
+
+    wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  async reserveLiveEvent(): Promise<void> {
+    const liveEvent = this.data.liveEvent
+    if (!liveEvent || this.data.isReserving) return
+
+    if (liveEvent.reservation_status === 'reserved') {
+      wx.showToast({ title: '你已经预约过了', icon: 'none' })
+      return
+    }
+
+    this.setData({ isReserving: true })
+
+    try {
+      const subscriptionAcceptCount = await getAcceptedSubscriptionCount()
+      const response = await reserveLiveEventRequest(liveEvent.event_no, {
+        subscription_accept_count: subscriptionAcceptCount,
+      })
+
+      if (response.code !== 200) return
+
+      this.setData({
+        liveEvent: {
+          ...liveEvent,
+          reservation_status: 'reserved',
+          reservation_count: liveEvent.reservation_count + 1,
         },
-        children: [
-          {
-            type: 'text',
-            text: '预约直播后，在直播开启前5分钟将会通过服务通知提醒您。',
-          },
-        ],
-      },
-      {
-        name: 'span',
-        attrs: {
-          style: 'color:#666666;',
-        },
-        children: [
-          {
-            type: 'text',
-            text: '预约审核通过后即可观看，敬请关注。',
-          },
-        ],
-      },
-    ],
+      })
+      wx.showToast({ title: '预约成功', icon: 'success' })
+    } catch (error) {
+      wx.showToast({
+        title: error instanceof Error ? error.message : '预约失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      this.setData({ isReserving: false })
+    }
   },
 
   onShareAppMessage() {
+    const liveEvent = this.data.liveEvent
     return {
-      title: '这是一个直播名称',
-      path: '/pages/live-preview/index',
+      title: liveEvent?.title ?? '问问星座直播',
+      path: liveEvent
+        ? `/pages/live-preview/index?id=${encodeURIComponent(liveEvent.event_no)}`
+        : '/pages/index/index',
     }
   },
 })
