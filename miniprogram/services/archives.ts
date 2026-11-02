@@ -1,5 +1,5 @@
-import { http } from '../utils/http'
-import type { ApiResponse } from '../utils/http'
+import { http } from '../utils/http/index'
+import type { ApiResponse } from '../utils/http/index'
 
 type Gender = 0 | 1 | 2
 type DaylightSaving = 0 | 1
@@ -48,6 +48,12 @@ const getArchives = (): Promise<ApiResponse<ArchiveSummary[]>> => {
   })
 }
 
+const getArchive = (archiveId: number): Promise<ApiResponse<Archive>> => {
+  return http<Archive>({
+    url: `/archives/${archiveId}`,
+  })
+}
+
 const createArchive = (
   params: CreateArchiveParams,
 ): Promise<ApiResponse<Archive>> => {
@@ -76,7 +82,13 @@ const deleteArchive = (archiveId: number): Promise<ApiResponse<null>> => {
   })
 }
 
-export { createArchive, deleteArchive, getArchives, updateArchive }
+export {
+  createArchive,
+  deleteArchive,
+  getArchive,
+  getArchives,
+  updateArchive,
+}
 export type {
   Archive,
   ArchiveSummary,

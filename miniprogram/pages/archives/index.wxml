@@ -26,8 +26,8 @@
     </view>
   </view>
 
-  <view wx:if="{{showHint}}" class="swipe-hint">
-    <text class="swipe-hint__text">向左滑动可以删除档案</text>
+  <view wx:if="{{showHint && archives.length > 0}}" class="swipe-hint">
+    <text class="swipe-hint__text">向左滑动档案卡片可以删除</text>
     <view
       class="close-action"
       bindtap="dismissHint"
@@ -39,78 +39,75 @@
     </view>
   </view>
 
-  <view class="archive-list">
-    <navigator
-      wx:for="{{archives}}"
-      wx:key="name"
-      class="archive-card"
-      url="/pages/archives/edit"
-      hover-class="archive-card--pressed"
-    >
-      <view class="archive-copy">
-        <view class="archive-heading">
-          <text class="archive-name">{{item.name}}</text>
-          <text class="archive-relation">({{item.relation}})</text>
-          <view class="zodiac-tag zodiac-tag--{{item.tone}}">
-            <text class="zodiac-symbol">{{item.symbol}}</text>
-            <text>{{item.zodiac}}</text>
-          </view>
-        </view>
-        <text class="archive-date">{{item.date}}</text>
-      </view>
-      <view
-        class="edit-action"
-        role="img"
-        aria-label="编辑{{item.name}}档案"
-      >
-        <view class="edit-icon"></view>
-      </view>
-    </navigator>
+  <view wx:if="{{isLoading}}" class="archive-list archive-list--loading">
+    <view wx:for="{{[1, 2, 3]}}" wx:key="*this" class="archive-skeleton">
+      <view class="skeleton-line skeleton-line--title"></view>
+      <view class="skeleton-line skeleton-line--meta"></view>
+    </view>
+  </view>
 
+  <view wx:elif="{{loadError}}" class="state-card">
+    <view class="state-orbit state-orbit--error">!</view>
+    <text class="state-title">档案暂时没有加载出来</text>
+    <text class="state-copy">{{loadError}}</text>
+    <button class="state-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <view wx:elif="{{archives.length === 0}}" class="state-card state-card--empty">
+    <view class="state-orbit">✦</view>
+    <text class="state-title">建立第一份星象档案</text>
+    <text class="state-copy">记录出生时间与地点，开启属于你的星盘故事。</text>
+    <navigator class="state-button" url="/pages/archives/edit">添加档案</navigator>
+  </view>
+
+  <view wx:else class="archive-list">
     <scroll-view
-      wx:if="{{thirdArchiveVisible}}"
+      wx:for="{{archives}}"
+      wx:key="id"
       class="swipe-archive"
       scroll-x="{{true}}"
       enhanced="{{true}}"
       show-scrollbar="{{false}}"
       scroll-with-animation="{{true}}"
-      scroll-left="{{thirdArchiveScrollLeft}}"
+      scroll-left="{{item.scrollLeft}}"
+      data-id="{{item.id}}"
       bindscroll="handleArchiveScroll"
       bindtouchend="settleArchiveSwipe"
     >
       <view class="swipe-track">
-        <navigator
+        <view
           class="archive-card archive-card--swipe"
-          url="/pages/archives/edit"
+          data-id="{{item.id}}"
+          bindtap="editArchive"
           hover-class="archive-card--pressed"
+          role="button"
+          aria-label="编辑{{item.name}}档案"
         >
           <view class="archive-copy">
             <view class="archive-heading">
-              <text class="archive-name">翩</text>
-              <text class="archive-relation">(家人)</text>
-              <view class="zodiac-tag zodiac-tag--orange">
-                <text class="zodiac-symbol">♉</text>
-                <text>金牛座</text>
+              <text class="archive-name">{{item.name}}</text>
+              <text class="archive-relation">{{item.genderLabel}}</text>
+              <view class="zodiac-tag zodiac-tag--{{item.zodiacTone}}">
+                <text class="zodiac-symbol">{{item.zodiacSymbol}}</text>
+                <text>{{item.zodiacName}}</text>
               </view>
             </view>
-            <text class="archive-date">/01/20 10:50</text>
+            <text class="archive-date">{{item.birthTimeText}}</text>
+            <text class="archive-place">{{item.birthPlace}} · UTC{{item.timezone >= 0 ? '+' : ''}}{{item.timezone}}</text>
           </view>
-          <view
-            class="edit-action"
-            role="img"
-            aria-label="编辑翩的档案"
-          >
+          <view class="edit-action" aria-hidden="true">
             <view class="edit-icon"></view>
           </view>
-        </navigator>
+        </view>
         <view
-          class="delete-action"
-          bindtap="deleteThirdArchive"
+          class="delete-action {{deletingArchiveId === item.id ? 'delete-action--loading' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="requestDeleteArchive"
           hover-class="delete-action--pressed"
           role="button"
-          aria-label="删除翩的档案"
+          aria-label="删除{{item.name}}的档案"
         >
-          <text>删除</text>
+          <text>{{deletingArchiveId === item.id ? '删除中' : '删除'}}</text>
         </view>
       </view>
     </scroll-view>

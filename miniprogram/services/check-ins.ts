@@ -1,5 +1,5 @@
-import { http } from '../utils/http'
-import type { ApiResponse } from '../utils/http'
+import { http } from '../utils/http/index'
+import type { ApiResponse } from '../utils/http/index'
 
 interface RewardCycleItem {
   cycle_day: number

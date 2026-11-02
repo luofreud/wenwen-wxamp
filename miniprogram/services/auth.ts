@@ -1,4 +1,4 @@
-import { logout as logoutRequest } from '../utils/http'
+import { logout as logoutRequest } from '../utils/http/index'
 
 /**
  * 注销当前会话。登录和 token 刷新由 HTTP 客户端自动完成。
