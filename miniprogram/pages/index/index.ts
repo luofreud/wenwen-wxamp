@@ -10,6 +10,7 @@ interface FortuneScoreItem {
   label: string
   score: number
   scoreText: string
+  heightStyle: string
   tone: 'love' | 'health' | 'wealth'
 }
 
@@ -33,6 +34,8 @@ interface DailyFortune {
 
 interface HomeFortuneRuntime {
   archiveKey: string
+  avatarLoopTimer: ReturnType<typeof setInterval> | null
+  avatarShiftTimer: ReturnType<typeof setTimeout> | null
   dataLoadId: number
   requestId: number
   storeInitialized: boolean
@@ -47,20 +50,17 @@ interface FeaturedAssessment extends AssessmentType {
   image: string
 }
 
-interface MoreAssessment extends AssessmentType {
-  tone: 'violet' | 'blue' | 'rose'
-}
-
 const FEATURED_REPORT_IMAGES = [
   '/assets/images/report-01.png',
   '/assets/images/report-02.png',
   '/assets/images/report-03.png',
 ]
 
-const MORE_REPORT_TONES: MoreAssessment['tone'][] = [
-  'violet',
-  'blue',
-  'rose',
+const LIVE_AVATARS = [
+  '/assets/images/avatar.png',
+  '/assets/images/avatar01.png',
+  '/assets/images/avatar02.png',
+  '/assets/images/avatar03.png',
 ]
 
 const FORTUNE_PATH = '/astrology/luck/day' as const
@@ -69,6 +69,8 @@ const homeFortuneRuntime = new WeakMap<object, HomeFortuneRuntime>()
 function createHomeFortuneRuntime(): HomeFortuneRuntime {
   return {
     archiveKey: '',
+    avatarLoopTimer: null,
+    avatarShiftTimer: null,
     dataLoadId: 0,
     requestId: 0,
     storeInitialized: false,
@@ -149,10 +151,14 @@ function archiveFortuneKey(archive: Archive, date: string): string {
 }
 
 function fortuneScores(fortune: DailyFortune): FortuneScoreItem[] {
+  const loveScore = roundScore(fortune.love)
+  const careerScore = roundScore(fortune.career)
+  const wealthScore = roundScore(fortune.wealth)
+
   return [
-    { label: '爱情', score: roundScore(fortune.love), scoreText: String(roundScore(fortune.love)), tone: 'love' },
-    { label: '事业', score: roundScore(fortune.career), scoreText: String(roundScore(fortune.career)), tone: 'health' },
-    { label: '财富', score: roundScore(fortune.wealth), scoreText: String(roundScore(fortune.wealth)), tone: 'wealth' },
+    { label: '爱情', score: loveScore, scoreText: String(loveScore), heightStyle: `height: ${loveScore}%;`, tone: 'love' },
+    { label: '事业', score: careerScore, scoreText: String(careerScore), heightStyle: `height: ${careerScore}%;`, tone: 'health' },
+    { label: '财富', score: wealthScore, scoreText: String(wealthScore), heightStyle: `height: ${wealthScore}%;`, tone: 'wealth' },
   ]
 }
 
@@ -167,9 +173,9 @@ function fortuneLuckItems(fortune: DailyFortune): FortuneLuckItem[] {
 
 function placeholderScores(): FortuneScoreItem[] {
   return [
-    { label: '爱情', score: 0, scoreText: '--', tone: 'love' },
-    { label: '事业', score: 0, scoreText: '--', tone: 'health' },
-    { label: '财富', score: 0, scoreText: '--', tone: 'wealth' },
+    { label: '爱情', score: 0, scoreText: '--', heightStyle: 'height: 0%;', tone: 'love' },
+    { label: '事业', score: 0, scoreText: '--', heightStyle: 'height: 0%;', tone: 'health' },
+    { label: '财富', score: 0, scoreText: '--', heightStyle: 'height: 0%;', tone: 'wealth' },
   ]
 }
 
@@ -191,13 +197,15 @@ Page({
     scrollViewHeight: 0,
     dataReady: false,
     liveEvent: null as HomeLiveEvent | null,
+    liveAvatarItems: [...LIVE_AVATARS, LIVE_AVATARS[0]],
+    avatarShifting: false,
     fortuneState: 'archive-loading' as FortuneState,
     fortuneUserName: '',
     moodScoreText: '--',
     moodBars: placeholderScores(),
     luckItems: placeholderLuckItems(),
     reports: [] as FeaturedAssessment[],
-    moreReports: [] as MoreAssessment[],
+    moreReports: [] as AssessmentType[],
   },
 
   onLoad() {
@@ -210,7 +218,12 @@ Page({
     if (!this.data.navigationReady) {
       this.initNavigation()
     }
+    this.startLiveAvatarLoop()
     void this.loadHomeData()
+  },
+
+  onHide() {
+    this.stopLiveAvatarLoop(true)
   },
 
   onResize() {
@@ -218,6 +231,7 @@ Page({
   },
 
   onUnload() {
+    this.stopLiveAvatarLoop(false)
     const runtime = homeFortuneRuntime.get(this)
     runtime?.unsubscribe?.()
     if (runtime) {
@@ -225,6 +239,55 @@ Page({
       runtime.requestId += 1
     }
     homeFortuneRuntime.delete(this)
+  },
+
+  startLiveAvatarLoop() {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime || runtime.avatarLoopTimer !== null) return
+
+    runtime.avatarLoopTimer = setInterval(() => {
+      this.shiftLiveAvatar()
+    }, 2400)
+  },
+
+  stopLiveAvatarLoop(resetAnimation: boolean) {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime) return
+
+    if (runtime.avatarLoopTimer !== null) {
+      clearInterval(runtime.avatarLoopTimer)
+      runtime.avatarLoopTimer = null
+    }
+    if (runtime.avatarShiftTimer !== null) {
+      clearTimeout(runtime.avatarShiftTimer)
+      runtime.avatarShiftTimer = null
+    }
+    if (resetAnimation && this.data.avatarShifting) {
+      this.setData({ avatarShifting: false })
+    }
+  },
+
+  shiftLiveAvatar() {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime || runtime.avatarShiftTimer !== null || this.data.avatarShifting) return
+    if (!this.data.liveEvent || this.data.liveEvent.reservation_count <= LIVE_AVATARS.length) return
+
+    const visibleAvatars = this.data.liveAvatarItems.slice(0, LIVE_AVATARS.length)
+    const firstAvatar = visibleAvatars[0]
+    if (!firstAvatar || visibleAvatars.length !== LIVE_AVATARS.length) return
+
+    this.setData({ avatarShifting: true })
+    runtime.avatarShiftTimer = setTimeout(() => {
+      const currentRuntime = homeFortuneRuntime.get(this)
+      if (!currentRuntime) return
+      currentRuntime.avatarShiftTimer = null
+
+      const nextAvatars = [...visibleAvatars.slice(1), firstAvatar]
+      this.setData({
+        liveAvatarItems: [...nextAvatars, nextAvatars[0]],
+        avatarShifting: false,
+      })
+    }, 420)
   },
 
   bindArchiveStore() {
@@ -384,10 +447,7 @@ Page({
         ...assessment,
         image: FEATURED_REPORT_IMAGES[index],
       }))
-      const moreReports = assessmentTypes.slice(3).map((assessment, index) => ({
-        ...assessment,
-        tone: MORE_REPORT_TONES[index % MORE_REPORT_TONES.length],
-      }))
+      const moreReports = assessmentTypes.slice(3)
 
       this.setData({ reports, moreReports })
     } catch {
@@ -408,9 +468,11 @@ Page({
       }
 
       const liveEvent = response.data.items[0]
+      const reservationCount = Math.max(0, Math.floor(liveEvent.reservation_count || 0))
       this.setData({
         liveEvent: {
           ...liveEvent,
+          reservation_count: reservationCount,
           detailUrl: `/pages/live-preview/index?id=${encodeURIComponent(liveEvent.event_no)}`,
         },
       })

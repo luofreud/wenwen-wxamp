@@ -106,7 +106,7 @@
               <view class="bar-track">
                 <view
                   class="bar-fill bar-fill--{{item.tone}}"
-                  style="height: {{item.score}}%;"
+                  style="{{item.heightStyle}}"
                 ></view>
               </view>
               <text class="bar-label">{{item.label}}</text>
@@ -134,21 +134,37 @@
     <image
       class="live-card__background"
       src="/assets/images/live-pre-backgroud.png"
-      mode="scaleToFill"
+      mode="widthFix"
       aria-hidden="true"
     />
     <view class="live-copy">
       <text class="live-title">{{liveEvent.title}}</text>
-      <text class="live-description">{{liveEvent.description}}</text>
-      <view class="reservation-row">
-        <view class="live-status-dot"></view>
-        <text class="reservation-count">{{liveEvent.reservation_count}}人已预约 · {{liveEvent.display_time_text}}</text>
+      <view class="live-description-wrap">
+        <text class="live-description">{{liveEvent.description}}</text>
       </view>
-      <navigator
-        class="reserve-button"
-        url="{{liveEvent.detailUrl}}"
-        hover-class="reserve-button--pressed"
-      >{{liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
+      <view class="live-action-row">
+        <view class="reservation-row">
+          <view
+            wx:if="{{liveEvent.reservation_count > 0}}"
+            class="live-avatar-stack {{liveEvent.reservation_count > 4 ? 'live-avatar-stack--animated' : 'live-avatar-stack--' + liveEvent.reservation_count}}"
+            aria-label="预约用户头像"
+          >
+            <view class="live-avatar-track {{liveEvent.reservation_count > 4 ? 'live-avatar-track--animated' : ''}} {{liveEvent.reservation_count > 4 && avatarShifting ? 'live-avatar-track--shifting' : ''}}">
+              <image class="live-viewer-avatar" src="{{liveAvatarItems[0]}}" mode="aspectFill" aria-hidden="true" />
+              <image wx:if="{{liveEvent.reservation_count > 1}}" class="live-viewer-avatar" src="{{liveAvatarItems[1]}}" mode="aspectFill" aria-hidden="true" />
+              <image wx:if="{{liveEvent.reservation_count > 2}}" class="live-viewer-avatar" src="{{liveAvatarItems[2]}}" mode="aspectFill" aria-hidden="true" />
+              <image wx:if="{{liveEvent.reservation_count > 3}}" class="live-viewer-avatar" src="{{liveAvatarItems[3]}}" mode="aspectFill" aria-hidden="true" />
+              <image wx:if="{{liveEvent.reservation_count > 4}}" class="live-viewer-avatar" src="{{liveAvatarItems[4]}}" mode="aspectFill" aria-hidden="true" />
+            </view>
+          </view>
+          <text class="reservation-count {{liveEvent.reservation_count === 0 ? 'reservation-count--solo' : ''}}">{{liveEvent.reservation_count}}人已预约</text>
+        </view>
+        <navigator
+          class="reserve-button"
+          url="{{liveEvent.detailUrl}}"
+          hover-class="reserve-button--pressed"
+        >{{liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
+      </view>
     </view>
   </view>
 
@@ -163,12 +179,14 @@
     <view
       wx:for="{{reports}}"
       wx:key="type_code"
-      class="report-card"
+      class="report-card report-card--{{index + 1}}"
       hover-class="content-card--pressed"
     >
       <view class="report-copy">
         <text class="report-title">{{item.title}}</text>
-        <text class="report-description">{{item.description}}</text>
+        <view class="report-description-wrap">
+          <text class="report-description">{{item.description}}</text>
+        </view>
       </view>
       <image class="report-image" src="{{item.image}}" mode="aspectFit" />
     </view>
@@ -189,14 +207,14 @@
       class="more-card"
       hover-class="content-card--pressed"
     >
+      <view class="more-cover" aria-hidden="true"></view>
       <view class="more-copy">
         <text class="more-title">{{item.title}}</text>
         <text class="more-description">{{item.description}}</text>
       </view>
-      <view class="more-decoration more-decoration--{{item.tone}}" aria-hidden="true">
-        <view class="decoration-orbit"></view>
-        <view class="decoration-star">✦</view>
-      </view>
+      <button class="more-action">
+        <text class="more-action__label">去测试</text>
+      </button>
     </view>
   </view>
     </view>
