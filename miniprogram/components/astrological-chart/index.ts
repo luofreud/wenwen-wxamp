@@ -185,7 +185,7 @@ const NATAL_CHART_PATH = '/astrology/chart/natal' as const
 
 const THEMES: Record<ThemeName, ChartTheme> = {
   degree: {
-    background: '#f9f9f9',
+    background: 'rgba(0, 0, 0, 0)',
     innerBackground: '#f9f9f9',
     ring: '#f9f9f9',
     secondRing: '#ececec',
@@ -199,7 +199,7 @@ const THEMES: Record<ThemeName, ChartTheme> = {
     zodiacInnerFactor: 0.9,
   },
   stardust: {
-    background: '#c5c1b1',
+    background: 'rgba(0, 0, 0, 0)',
     innerBackground: '#f7f3e9',
     ring: '#dac684',
     secondRing: '#d4ad98',
@@ -213,7 +213,7 @@ const THEMES: Record<ThemeName, ChartTheme> = {
     zodiacInnerFactor: 0.9,
   },
   classic: {
-    background: '#07111f',
+    background: 'rgba(0, 0, 0, 0)',
     innerBackground: '#07111f',
     ring: '#141c4b',
     secondRing: '#384673',
@@ -298,7 +298,7 @@ function createChartRequestRuntime(): ChartRequestRuntime {
   }
 }
 
-function archiveRequestKey(archive: Archive): string {
+function archiveRequestKey(archive: Archive, format: number): string {
   return [
     archive.id,
     archive.birth_time,
@@ -308,6 +308,7 @@ function archiveRequestKey(archive: Archive): string {
     archive.timezone,
     archive.daylight_saving,
     archive.updated_at,
+    format,
   ].join('|')
 }
 
@@ -478,6 +479,8 @@ Component({
   data: {
     theme: 'degree' as ThemeName,
     zodiacStyle: 'symbol' as ZodiacStyle,
+    chartFormat: DEFAULT_CHART_SETTINGS.format as 0 | 1,
+    styleSheetVisible: false,
     chartReady: false,
     chartLoadState: 'loading' as ChartLoadState,
     chartStatusMessage: '正在生成本命盘…',
@@ -565,24 +568,26 @@ Component({
         return
       }
 
-      const nextArchiveKey = archiveRequestKey(selectedArchive)
+      const nextArchiveKey = archiveRequestKey(selectedArchive, this.data.chartFormat)
       if (requestRuntime.archiveKey === nextArchiveKey) return
       requestRuntime.archiveKey = nextArchiveKey
       void this.loadChart(selectedArchive)
     },
 
-    async loadChart(archive: Archive) {
+    async loadChart(archive: Archive, showLoading = true) {
       const requestRuntime = requestRuntimeByInstance.get(this)
       if (!requestRuntime) return
 
       const requestId = requestRuntime.requestId + 1
       requestRuntime.requestId = requestId
-      requestRuntime.payload = null
-      this.setData({
-        chartLoadState: 'loading',
-        chartStatusMessage: '正在生成本命盘…',
-        detail: createEmptyDetail(),
-      }, () => this.drawChart())
+      if (showLoading) {
+        requestRuntime.payload = null
+        this.setData({
+          chartLoadState: 'loading',
+          chartStatusMessage: '正在生成本命盘…',
+          detail: createEmptyDetail(),
+        }, () => this.drawChart())
+      }
 
       try {
         const birthLongitude = archive.birth_longitude
@@ -592,10 +597,11 @@ Component({
         }
 
         const settings = this.data.settings
+        const chartFormat = this.data.chartFormat
         const response = await requestXingpan<ChartPayload>({
           path: NATAL_CHART_PATH,
           ay: settings.ayanamsa,
-          h_sys: settings.house,
+          h_sys: chartFormat === 0 ? 'W' : settings.house,
           planets: [...settings.planets],
           virtual: [...settings.virtual],
           planet_xs: [...settings.planetXs],
@@ -607,7 +613,7 @@ Component({
           longitude: birthLongitude,
           latitude: birthLatitude,
           tomorrow_type: 1,
-          format: settings.format,
+          format: chartFormat,
           svg_type: -1,
           is_corpus: 1,
           asp: 1,
@@ -627,6 +633,13 @@ Component({
       } catch (error) {
         const currentRuntime = requestRuntimeByInstance.get(this)
         if (!currentRuntime || currentRuntime.requestId !== requestId) return
+        if (!showLoading && currentRuntime.payload) {
+          wx.showToast({
+            title: errorMessage(error, '星盘切换失败，请稍后重试'),
+            icon: 'none',
+          })
+          return
+        }
         currentRuntime.payload = null
         this.setData({
           chartLoadState: 'error',
@@ -1179,6 +1192,29 @@ Component({
     },
 
     stopPropagation() {},
+
+    openStyleSheet() {
+      this.setData({ styleSheetVisible: true })
+    },
+
+    closeStyleSheet() {
+      this.setData({ styleSheetVisible: false })
+    },
+
+    toggleChartFormat() {
+      const chartFormat = this.data.chartFormat === 1 ? 0 : 1
+      const selectedArchive = archiveStore.selectedArchive
+      const requestRuntime = requestRuntimeByInstance.get(this)
+      if (selectedArchive && requestRuntime) {
+        requestRuntime.archiveKey = archiveRequestKey(selectedArchive, chartFormat)
+      }
+      this.setData({ chartFormat }, () => {
+        if (selectedArchive) {
+          void this.loadChart(selectedArchive, false)
+        }
+      })
+      this.triggerEvent('formatchange', { format: chartFormat })
+    },
 
     selectTheme(event: WechatMiniprogram.TouchEvent) {
       const theme = event.currentTarget.dataset.theme as ThemeName

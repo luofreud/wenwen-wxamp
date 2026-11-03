@@ -112,6 +112,7 @@ Page({
     navigationBarHeight: 0,
     statusBarHeight: 0,
     titleBarRight: 0,
+    pageHeight: 0,
     archiveName: '星盘详情',
     interpretations: [] as InterpretationItem[],
   },
@@ -130,6 +131,10 @@ Page({
     if (runtime?.storeInitialized) {
       this.syncNatalAnalysis(archiveStore.getSnapshot())
     }
+  },
+
+  onResize() {
+    this.initNavigation()
   },
 
   onUnload() {
@@ -228,9 +233,11 @@ Page({
       const menuButton = wx.getMenuButtonBoundingClientRect()
       const statusBarHeight = windowInfo.statusBarHeight
       const navigationBarHeight = menuButton.bottom + menuButton.top - statusBarHeight
+      const pageHeight = windowInfo.windowHeight
 
       if (
         windowInfo.windowWidth <= 0 ||
+        pageHeight <= 0 ||
         statusBarHeight < 0 ||
         menuButton.width <= 0 ||
         menuButton.height <= 0 ||
@@ -244,6 +251,7 @@ Page({
         navigationBarHeight: Math.ceil(navigationBarHeight),
         statusBarHeight: Math.ceil(statusBarHeight),
         titleBarRight: Math.ceil(windowInfo.windowWidth - menuButton.left + 12),
+        pageHeight: Math.ceil(pageHeight),
       })
     } catch (error) {
       console.warn('获取导航栏尺寸失败', error)

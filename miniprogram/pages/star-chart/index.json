@@ -1,4 +1,6 @@
 {
+  "renderer": "webview",
+  "disableScroll": false,
   "navigationBarTitleText": "星图",
   "usingComponents": {
     "astrological-chart": "/components/astrological-chart/index"
