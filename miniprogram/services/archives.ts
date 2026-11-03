@@ -4,22 +4,19 @@ import type { ApiResponse } from '../utils/http/index'
 type Gender = 0 | 1 | 2
 type DaylightSaving = 0 | 1
 
-interface ArchiveSummary {
+interface Archive {
   id: number
   name: string
   gender: Gender
   birth_time: string
   birth_place: string
-  current_place: string
-  timezone: number
-  daylight_saving: DaylightSaving
-}
-
-interface Archive extends ArchiveSummary {
   birth_longitude: number | null
   birth_latitude: number | null
+  current_place: string
   current_longitude: number | null
   current_latitude: number | null
+  timezone: number
+  daylight_saving: DaylightSaving
   remark: string
   created_at: string
   updated_at: string
@@ -42,8 +39,8 @@ interface CreateArchiveParams {
 
 type UpdateArchiveParams = Partial<CreateArchiveParams>
 
-const getArchives = (): Promise<ApiResponse<ArchiveSummary[]>> => {
-  return http<ArchiveSummary[]>({
+const getArchives = (): Promise<ApiResponse<Archive[]>> => {
+  return http<Archive[]>({
     url: '/archives',
   })
 }
@@ -91,7 +88,6 @@ export {
 }
 export type {
   Archive,
-  ArchiveSummary,
   CreateArchiveParams,
   DaylightSaving,
   Gender,

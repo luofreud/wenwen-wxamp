@@ -1,9 +1,13 @@
-import chartResponseSource from '../../assets/demo-data'
 import ixingpanGlyphs, { VectorGlyph, VectorGlyphCommand } from '../../assets/fonts/ixingpan-glyphs'
 import ixingpanCnGlyphs from '../../assets/fonts/ixingpancn-glyphs'
+import { requestXingpan } from '../../services/index'
+import type { Archive } from '../../services/index'
+import { archiveStore } from '../../stores/index'
+import type { ArchiveState } from '../../stores/index'
 
 type ThemeName = 'degree' | 'stardust' | 'classic'
 type ZodiacStyle = 'text' | 'symbol'
+type ChartLoadState = 'loading' | 'ready' | 'empty' | 'error'
 
 interface SignPosition {
   deg: number
@@ -93,12 +97,6 @@ interface ChartPayload {
   }
 }
 
-interface ChartResponse {
-  code: number
-  data: ChartPayload
-  msg: string
-}
-
 interface Point {
   x: number
   y: number
@@ -163,7 +161,13 @@ interface CanvasField {
   height: number
 }
 
-const chartResponse = chartResponseSource as ChartResponse
+interface ChartRequestRuntime {
+  payload: ChartPayload | null
+  requestId: number
+  archiveKey: string
+  storeInitialized: boolean
+  unsubscribe: (() => void) | null
+}
 
 const DEFAULT_CHART_SETTINGS = Object.freeze({
   ayanamsa: -1,
@@ -172,9 +176,12 @@ const DEFAULT_CHART_SETTINGS = Object.freeze({
   virtual: [10, 11],
   planetXs: [] as number[],
   planetXf: [] as number[],
+  planetDegree: {} as Record<string, number>,
   phase: { 0: 6, 60: 3, 90: 5, 120: 5, 180: 5 },
   format: 1,
 })
+
+const NATAL_CHART_PATH = '/astrology/chart/natal' as const
 
 const THEMES: Record<ThemeName, ChartTheme> = {
   degree: {
@@ -279,6 +286,54 @@ const SYMBOL_RING_FONT_SIZES = [14, 8.5, 12, 8.5, 12]
 const TEXT_RING_FONT_SIZES = [9, 8, 8, 8, 12]
 
 const runtimeByInstance = new WeakMap<object, CanvasRuntime>()
+const requestRuntimeByInstance = new WeakMap<object, ChartRequestRuntime>()
+
+function createChartRequestRuntime(): ChartRequestRuntime {
+  return {
+    payload: null,
+    requestId: 0,
+    archiveKey: '',
+    storeInitialized: false,
+    unsubscribe: null,
+  }
+}
+
+function archiveRequestKey(archive: Archive): string {
+  return [
+    archive.id,
+    archive.birth_time,
+    archive.birth_place,
+    archive.birth_longitude,
+    archive.birth_latitude,
+    archive.timezone,
+    archive.daylight_saving,
+    archive.updated_at,
+  ].join('|')
+}
+
+function formatArchiveBirthday(value: string, daylightSaving: 0 | 1): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(value.trim())
+  if (!match) {
+    throw new Error('当前档案的出生时间格式无效')
+  }
+
+  const timestamp = Date.UTC(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+    Number(match[6] ?? 0),
+  ) - daylightSaving * 60 * 60 * 1000
+  const standardTime = new Date(timestamp)
+  const pad = (part: number): string => String(part).padStart(2, '0')
+
+  return `${standardTime.getUTCFullYear()}-${pad(standardTime.getUTCMonth() + 1)}-${pad(standardTime.getUTCDate())} ${pad(standardTime.getUTCHours())}:${pad(standardTime.getUTCMinutes())}:${pad(standardTime.getUTCSeconds())}`
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback
+}
 
 function normalizeAngle(value: number): number {
   return ((value % 360) + 360) % 360
@@ -424,6 +479,8 @@ Component({
     theme: 'degree' as ThemeName,
     zodiacStyle: 'symbol' as ZodiacStyle,
     chartReady: false,
+    chartLoadState: 'loading' as ChartLoadState,
+    chartStatusMessage: '正在生成本命盘…',
     settings: DEFAULT_CHART_SETTINGS,
     themeOptions: [
       { value: 'degree', label: '度数' },
@@ -439,14 +496,167 @@ Component({
 
   lifetimes: {
     ready() {
+      requestRuntimeByInstance.set(this, createChartRequestRuntime())
       this.initializeCanvas()
+      this.bindArchiveStore()
     },
     detached() {
+      const requestRuntime = requestRuntimeByInstance.get(this)
+      requestRuntime?.unsubscribe?.()
+      if (requestRuntime) {
+        requestRuntime.requestId += 1
+      }
       runtimeByInstance.delete(this)
+      requestRuntimeByInstance.delete(this)
     },
   },
 
   methods: {
+    bindArchiveStore() {
+      const requestRuntime = requestRuntimeByInstance.get(this)
+      if (!requestRuntime) return
+
+      requestRuntime.unsubscribe = archiveStore.subscribe((snapshot) => {
+        if (requestRuntime.storeInitialized) {
+          this.handleArchiveSnapshot(snapshot)
+        }
+      })
+
+      void archiveStore.init()
+        .then(() => {
+          const currentRuntime = requestRuntimeByInstance.get(this)
+          if (!currentRuntime) return
+          currentRuntime.storeInitialized = true
+          this.handleArchiveSnapshot(archiveStore.getSnapshot())
+        })
+        .catch((error: unknown) => {
+          if (!requestRuntimeByInstance.has(this)) return
+          this.setData({
+            chartLoadState: 'error',
+            chartStatusMessage: errorMessage(error, '档案加载失败，请稍后重试'),
+          })
+        })
+    },
+
+    handleArchiveSnapshot(snapshot: Readonly<ArchiveState>) {
+      const requestRuntime = requestRuntimeByInstance.get(this)
+      if (!requestRuntime) return
+
+      if (snapshot.isLoading) {
+        if (!requestRuntime.payload) {
+          this.setData({
+            chartLoadState: 'loading',
+            chartStatusMessage: '正在读取档案…',
+          })
+        }
+        return
+      }
+
+      const selectedArchive = archiveStore.selectedArchive
+      if (!selectedArchive) {
+        requestRuntime.payload = null
+        requestRuntime.archiveKey = ''
+        requestRuntime.requestId += 1
+        this.setData({
+          chartLoadState: 'empty',
+          chartStatusMessage: '请先创建或选择一个档案',
+          detail: createEmptyDetail(),
+        }, () => this.drawChart())
+        return
+      }
+
+      const nextArchiveKey = archiveRequestKey(selectedArchive)
+      if (requestRuntime.archiveKey === nextArchiveKey) return
+      requestRuntime.archiveKey = nextArchiveKey
+      void this.loadChart(selectedArchive)
+    },
+
+    async loadChart(archive: Archive) {
+      const requestRuntime = requestRuntimeByInstance.get(this)
+      if (!requestRuntime) return
+
+      const requestId = requestRuntime.requestId + 1
+      requestRuntime.requestId = requestId
+      requestRuntime.payload = null
+      this.setData({
+        chartLoadState: 'loading',
+        chartStatusMessage: '正在生成本命盘…',
+        detail: createEmptyDetail(),
+      }, () => this.drawChart())
+
+      try {
+        const birthLongitude = archive.birth_longitude
+        const birthLatitude = archive.birth_latitude
+        if (birthLongitude === null || birthLatitude === null) {
+          throw new Error('当前档案缺少出生地经纬度')
+        }
+
+        const settings = this.data.settings
+        const response = await requestXingpan<ChartPayload>({
+          path: NATAL_CHART_PATH,
+          ay: settings.ayanamsa,
+          h_sys: settings.house,
+          planets: [...settings.planets],
+          virtual: [...settings.virtual],
+          planet_xs: [...settings.planetXs],
+          planet_xf: [...settings.planetXf],
+          planet_degree: { ...settings.planetDegree },
+          phase: { ...settings.phase },
+          birthday: formatArchiveBirthday(archive.birth_time, archive.daylight_saving),
+          tz: archive.timezone,
+          longitude: birthLongitude,
+          latitude: birthLatitude,
+          tomorrow_type: 1,
+          format: settings.format,
+          svg_type: -1,
+          is_corpus: 1,
+          asp: 1,
+        })
+
+        const currentRuntime = requestRuntimeByInstance.get(this)
+        if (!currentRuntime || currentRuntime.requestId !== requestId) return
+        if (response.code !== 200) {
+          throw new Error(response.msg || '本命盘生成失败')
+        }
+
+        currentRuntime.payload = response.data
+        this.setData({
+          chartLoadState: 'ready',
+          chartStatusMessage: '',
+        }, () => this.drawChart())
+      } catch (error) {
+        const currentRuntime = requestRuntimeByInstance.get(this)
+        if (!currentRuntime || currentRuntime.requestId !== requestId) return
+        currentRuntime.payload = null
+        this.setData({
+          chartLoadState: 'error',
+          chartStatusMessage: errorMessage(error, '本命盘生成失败，请稍后重试'),
+        }, () => this.drawChart())
+      }
+    },
+
+    retryLoadChart() {
+      const selectedArchive = archiveStore.selectedArchive
+      if (selectedArchive) {
+        void this.loadChart(selectedArchive)
+        return
+      }
+
+      this.setData({
+        chartLoadState: 'loading',
+        chartStatusMessage: '正在读取档案…',
+      })
+      void archiveStore.refresh()
+        .then(() => this.handleArchiveSnapshot(archiveStore.getSnapshot()))
+        .catch((error: unknown) => {
+          if (!requestRuntimeByInstance.has(this)) return
+          this.setData({
+            chartLoadState: 'error',
+            chartStatusMessage: errorMessage(error, '档案加载失败，请稍后重试'),
+          })
+        })
+    },
+
     initializeCanvas() {
       this.createSelectorQuery()
         .select('#astrolabe-canvas')
@@ -483,7 +693,14 @@ Component({
       const themeName = this.data.theme as ThemeName
       const style = this.data.zodiacStyle as ZodiacStyle
       const theme = THEMES[themeName]
-      const payload = chartResponse.data
+      const payload = requestRuntimeByInstance.get(this)?.payload
+      context.clearRect(0, 0, width, height)
+      runtime.detailTargets = []
+      if (!payload) {
+        context.fillStyle = theme.background
+        context.fillRect(0, 0, width, height)
+        return
+      }
       const size = Math.min(width, height)
       const uiScale = responsiveScale(size)
       const center = { x: width / 2, y: height / 2 }
@@ -495,9 +712,6 @@ Component({
       const fourthOuter = thirdInner
       const fourthInner = Math.max(radius * 0.3, fourthOuter - ringUnit * (themeName === 'classic' ? 0.9 : 2 / 3))
       const ascDegree = payload.house.find((house) => house.house_id === 1)?.longitude ?? 0
-
-      context.clearRect(0, 0, width, height)
-      runtime.detailTargets = []
 
       this.drawRingBackground(context, center, radius, zodiacInner, secondInner, thirdInner, fourthInner, themeName, theme, ascDegree, uiScale)
       this.drawZodiac(context, center, radius, zodiacInner, ascDegree, themeName, theme, style, uiScale)
@@ -837,7 +1051,8 @@ Component({
     },
 
     openPlanetDetail(codeName: string) {
-      const planet = chartResponse.data.planet.find((item) => item.code_name === codeName)
+      const payload = requestRuntimeByInstance.get(this)?.payload
+      const planet = payload?.planet.find((item) => item.code_name === codeName)
       if (!planet) return
       const color = PLANET_COLORS[planet.code_name] ?? '#111111'
       const detail: DetailView = {
@@ -877,7 +1092,8 @@ Component({
     },
 
     openHouseDetail(houseId: number) {
-      const house = chartResponse.data.house.find((item) => item.house_id === houseId)
+      const payload = requestRuntimeByInstance.get(this)?.payload
+      const house = payload?.house.find((item) => item.house_id === houseId)
       if (!house) return
       const mainPlanet = house.main_planet[0]
       const detail: DetailView = {
@@ -917,7 +1133,8 @@ Component({
     },
 
     openZodiacDetail(signId: number) {
-      const sign = chartResponse.data.sign.find((item) => item.sign_id === signId)
+      const payload = requestRuntimeByInstance.get(this)?.payload
+      const sign = payload?.sign.find((item) => item.sign_id === signId)
       if (!sign) return
       const guardian = sign.sign_guardian[0]
       const attributes = sign.sign_attribute.join('、')

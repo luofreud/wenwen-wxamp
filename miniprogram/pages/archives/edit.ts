@@ -1,6 +1,5 @@
 import {
   createArchive,
-  getArchive,
   updateArchive,
 } from '../../services/index'
 import type {
@@ -10,6 +9,7 @@ import type {
   Gender,
   UpdateArchiveParams,
 } from '../../services/index'
+import { archiveStore } from '../../stores/index'
 
 interface TextInputEvent {
   detail: {
@@ -168,17 +168,23 @@ Page({
     }
   },
 
-  async loadArchive(archiveId: number): Promise<void> {
+  async loadArchive(archiveId: number, forceRefresh = false): Promise<void> {
     this.setData({ isLoading: true, loadError: '' })
 
     try {
-      const response = await getArchive(archiveId)
-      if (response.code !== 200) {
-        this.setData({ loadError: response.msg || '档案加载失败' })
+      if (forceRefresh) {
+        await archiveStore.refresh()
+      } else {
+        await archiveStore.init()
+      }
+
+      const archive = archiveStore.getArchiveById(archiveId)
+      if (!archive) {
+        this.setData({ loadError: '未找到该档案，可能已被删除' })
         return
       }
 
-      this.fillArchive(response.data)
+      this.fillArchive(archive)
     } catch (error) {
       this.setData({
         loadError: error instanceof Error ? error.message : '网络开小差了，请稍后重试',
@@ -217,7 +223,7 @@ Page({
 
   retryLoad() {
     if (this.data.archiveId !== null) {
-      void this.loadArchive(this.data.archiveId)
+      void this.loadArchive(this.data.archiveId, true)
     }
   },
 
@@ -346,6 +352,7 @@ Page({
         }
         const response = await createArchive(params)
         if (response.code !== 200) return
+        archiveStore.upsertArchive(response.data)
       } else {
         const params = this.getUpdateParams(form)
         if (Object.keys(params).length === 0) {
@@ -355,6 +362,7 @@ Page({
 
         const response = await updateArchive(archiveId, params)
         if (response.code !== 200) return
+        archiveStore.upsertArchive(response.data)
       }
 
       wx.showToast({

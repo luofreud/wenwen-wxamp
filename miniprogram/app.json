@@ -6,7 +6,8 @@
     "pages/star-chart/index",
     "pages/live-preview/index",
     "pages/archives/index",
-    "pages/archives/edit"
+    "pages/archives/edit",
+    "pages/archives/switch"
   ],
   "window": {
     "navigationBarTextStyle": "black",

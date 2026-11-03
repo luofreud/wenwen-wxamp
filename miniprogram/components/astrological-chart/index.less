@@ -30,6 +30,73 @@
   height: 100%;
 }
 
+.chart-status {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  background: rgba(249, 249, 249, 0.9);
+  box-sizing: border-box;
+}
+
+.chart-status__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 500rpx;
+  padding: 34rpx 40rpx;
+  border: 1rpx solid rgba(104, 77, 145, 0.1);
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12rpx 34rpx rgba(58, 38, 92, 0.08);
+  box-sizing: border-box;
+}
+
+.chart-status__spinner {
+  width: 42rpx;
+  height: 42rpx;
+  margin-bottom: 20rpx;
+  border: 4rpx solid rgba(123, 71, 229, 0.14);
+  border-top-color: #7b47e5;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: chart-status-spin 760ms linear infinite;
+}
+
+.chart-status__message {
+  color: #665d73;
+  font-size: 25rpx;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.chart-status__retry {
+  height: 58rpx;
+  margin: 22rpx 0 0;
+  padding: 0 34rpx;
+  border: 0;
+  border-radius: 29rpx;
+  background: #7b47e5;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 58rpx;
+}
+
+.chart-status__retry::after {
+  border: 0;
+}
+
+@keyframes chart-status-spin {
+  to { transform: rotate(360deg); }
+}
+
 .style-panel {
   position: relative;
   z-index: 1;

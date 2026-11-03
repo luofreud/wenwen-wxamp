@@ -54,6 +54,20 @@
       aria-label="本命盘"
     ></canvas>
     <view
+      wx:if="{{chartLoadState !== 'ready'}}"
+      class="chart-status chart-status--{{chartLoadState}}"
+    >
+      <view class="chart-status__card">
+        <view wx:if="{{chartLoadState === 'loading'}}" class="chart-status__spinner"></view>
+        <text class="chart-status__message">{{chartStatusMessage}}</text>
+        <button
+          wx:if="{{chartLoadState === 'error'}}"
+          class="chart-status__retry"
+          bindtap="retryLoadChart"
+        >重试</button>
+      </view>
+    </view>
+    <view
       wx:if="{{detail.visible}}"
       class="detail-layer"
       bindtap="closeDetail"

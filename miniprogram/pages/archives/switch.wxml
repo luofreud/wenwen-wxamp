@@ -1,0 +1,78 @@
+<!-- pages/archives/switch.wxml -->
+<view wx:if="{{navigationReady}}" class="switch-page">
+  <view
+    class="custom-navigation"
+    style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
+  >
+    <view
+      class="navigation-content"
+      style="padding-right: {{navigationRightPadding}}px;"
+    >
+      <navigator
+        class="back-action"
+        open-type="navigateBack"
+        delta="1"
+        hover-class="navigation-action--pressed"
+        aria-label="返回"
+      >
+        <view class="back-icon"></view>
+      </navigator>
+      <text class="navigation-title">切换档案</text>
+    </view>
+  </view>
+
+  <view class="page-intro">
+    <text class="intro-kicker">CELESTIAL PROFILE</text>
+    <text class="intro-title">选择本次使用的档案</text>
+    <text class="intro-copy">切换后，星盘与相关解读将使用该档案的出生信息。</text>
+  </view>
+
+  <view wx:if="{{isLoading}}" class="archive-list">
+    <view wx:for="{{[1, 2, 3]}}" wx:key="*this" class="archive-card archive-card--skeleton">
+      <view class="skeleton-line skeleton-line--title"></view>
+      <view class="skeleton-line skeleton-line--meta"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="state-card">
+    <view class="state-symbol">!</view>
+    <text class="state-title">档案暂时没有加载出来</text>
+    <text class="state-copy">{{loadError}}</text>
+    <button class="state-button" bindtap="retryLoad">重新加载</button>
+  </view>
+
+  <view wx:elif="{{archives.length === 0}}" class="state-card">
+    <view class="state-symbol state-symbol--empty">✦</view>
+    <text class="state-title">还没有可切换的档案</text>
+    <text class="state-copy">先建立一份档案，记录出生时间和地点。</text>
+    <navigator class="state-button" url="/pages/archives/edit">添加档案</navigator>
+  </view>
+
+  <view wx:else class="archive-list">
+    <view
+      wx:for="{{archives}}"
+      wx:key="id"
+      class="archive-card {{item.isSelected ? 'archive-card--selected' : ''}} {{switchingArchiveId === item.id ? 'archive-card--switching' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="selectArchive"
+      hover-class="archive-card--pressed"
+      role="button"
+      aria-label="{{item.isSelected ? '当前档案' : '切换到'}}{{item.name}}"
+    >
+      <view class="archive-mark" aria-hidden="true">
+        <text>{{item.initial}}</text>
+      </view>
+      <view class="archive-copy">
+        <view class="archive-heading">
+          <text class="archive-name">{{item.name}}</text>
+          <text class="gender-tag">{{item.genderLabel}}</text>
+        </view>
+        <text class="archive-time">{{item.birthTimeText}}</text>
+        <text class="archive-place">{{item.birth_place}}</text>
+      </view>
+      <view class="selection-control" aria-hidden="true">
+        <view wx:if="{{item.isSelected}}" class="selection-check"></view>
+      </view>
+    </view>
+  </view>
+</view>

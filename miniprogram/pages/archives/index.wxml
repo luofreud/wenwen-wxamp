@@ -95,7 +95,14 @@
             <text class="archive-date">{{item.birthTimeText}}</text>
             <text class="archive-place">{{item.birthPlace}} · UTC{{item.timezone >= 0 ? '+' : ''}}{{item.timezone}}</text>
           </view>
-          <view class="edit-action" aria-hidden="true">
+          <view
+            class="edit-action"
+            data-id="{{item.id}}"
+            catchtap="editArchive"
+            hover-class="edit-action--pressed"
+            role="button"
+            aria-label="编辑{{item.name}}档案"
+          >
             <view class="edit-icon"></view>
           </view>
         </view>

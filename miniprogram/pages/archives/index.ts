@@ -1,7 +1,8 @@
-import { deleteArchive, getArchives } from '../../services/index'
-import type { ArchiveSummary, Gender } from '../../services/index'
+import { deleteArchive } from '../../services/index'
+import type { Archive, Gender } from '../../services/index'
+import { archiveStore } from '../../stores/index'
 
-interface ArchiveListItem extends ArchiveSummary {
+interface ArchiveListItem extends Archive {
   birthTimeText: string
   genderLabel: string
   scrollLeft: number
@@ -71,7 +72,7 @@ const formatBirthTime = (birthTime: string): string => {
   return normalized.length >= 16 ? normalized.slice(0, 16) : normalized
 }
 
-const toListItem = (archive: ArchiveSummary): ArchiveListItem => {
+const toListItem = (archive: Archive): ArchiveListItem => {
   const zodiac = getZodiac(archive.birth_time)
 
   return {
@@ -111,7 +112,7 @@ Page({
   },
 
   onPullDownRefresh() {
-    void this.loadArchives(false).finally(() => wx.stopPullDownRefresh())
+    void this.loadArchives(false, true).finally(() => wx.stopPullDownRefresh())
   },
 
   initNavigation() {
@@ -143,28 +144,32 @@ Page({
     }
   },
 
-  async loadArchives(showLoading = true): Promise<void> {
+  async loadArchives(showLoading = true, forceRefresh = false): Promise<void> {
     if (showLoading) {
       this.setData({ isLoading: true })
     }
     this.setData({ loadError: '' })
 
     try {
-      const response = await getArchives()
-      if (response.code !== 200) {
-        this.setData({ loadError: response.msg || '档案加载失败' })
-        return
+      if (forceRefresh) {
+        await archiveStore.refresh()
+      } else {
+        await archiveStore.init()
       }
-
-      this.setData({
-        archives: response.data.map(toListItem),
-      })
+      this.syncArchivesFromStore()
     } catch (error) {
       const message = error instanceof Error ? error.message : '网络开小差了，请稍后重试'
       this.setData({ loadError: message })
     } finally {
       this.setData({ isLoading: false })
     }
+  },
+
+  syncArchivesFromStore() {
+    const snapshot = archiveStore.getSnapshot()
+    this.setData({
+      archives: snapshot.archives.map(toListItem),
+    })
   },
 
   retryLoad() {
@@ -239,9 +244,8 @@ Page({
       const response = await deleteArchive(archiveId)
       if (response.code !== 200) return
 
-      this.setData({
-        archives: this.data.archives.filter(({ id }) => id !== archiveId),
-      })
+      archiveStore.removeArchive(archiveId)
+      this.syncArchivesFromStore()
       wx.showToast({ title: '已删除', icon: 'success' })
     } catch (error) {
       wx.showToast({
