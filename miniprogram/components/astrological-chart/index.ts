@@ -280,8 +280,8 @@ const ASPECT_COLORS: Record<number, string> = {
 }
 const STARDUST_SECTORS = ['#b1bec7', '#dac684', '#d4ac96', '#bccbb9']
 const SYMBOL_SIZE_FACTOR = 0.78
-const SYMBOL_RING_OFFSETS = [-24, -10, 4, 17, 29]
-const TEXT_RING_OFFSETS = [-28, -12, 3, 17, 29]
+const SYMBOL_RING_OFFSETS = [29, 17, 4, -10, -24]
+const TEXT_RING_OFFSETS = [29, 17, 3, -12, -28]
 const SYMBOL_RING_FONT_SIZES = [14, 8.5, 12, 8.5, 12]
 const TEXT_RING_FONT_SIZES = [9, 8, 8, 8, 12]
 
@@ -727,11 +727,24 @@ Component({
       const ascDegree = payload.house.find((house) => house.house_id === 1)?.longitude ?? 0
 
       this.drawRingBackground(context, center, radius, zodiacInner, secondInner, thirdInner, fourthInner, themeName, theme, ascDegree, uiScale)
+      if (themeName === 'classic') {
+        this.drawClassicAxes(context, center, radius, ascDegree, payload.house, uiScale)
+      }
       this.drawZodiac(context, center, radius, zodiacInner, ascDegree, themeName, theme, style, uiScale)
-      this.drawHouses(context, center, themeName === 'classic' ? radius : thirdInner, fourthInner, ascDegree, themeName, theme, payload.house, uiScale)
-      this.drawAspects(context, center, fourthInner, ascDegree, themeName, payload.planet, uiScale)
-      this.drawHouseNumbers(context, center, themeName === 'classic' ? (radius + fourthInner) / 2 : (fourthOuter + fourthInner) / 2, ascDegree, themeName, theme, payload.house, uiScale)
-      this.drawPlanets(context, center, themeName === 'classic' ? fourthInner * 0.76 : (secondInner + thirdInner) / 2, ascDegree, themeName, theme, style, payload.planet, uiScale)
+      this.drawHouses(
+        context,
+        center,
+        themeName === 'classic' ? radius : secondInner,
+        themeName === 'classic' ? fourthOuter : fourthInner,
+        ascDegree,
+        themeName,
+        theme,
+        payload.house,
+        uiScale,
+      )
+      this.drawAspects(context, center, themeName === 'classic' ? fourthInner * 0.75 : fourthInner, ascDegree, themeName, payload.planet, uiScale)
+      this.drawHouseNumbers(context, center, (fourthOuter + fourthInner) / 2, ascDegree, themeName, theme, payload.house, uiScale)
+      this.drawPlanets(context, center, themeName === 'classic' ? fourthInner : (secondInner + thirdInner) / 2, ascDegree, themeName, theme, style, payload.planet, uiScale)
     },
 
     drawRingBackground(
@@ -774,24 +787,34 @@ Component({
         fillCircle(thirdInner, theme.innerBackground)
       }
       fillCircle(thirdInner, themeName === 'stardust' ? theme.innerBackground : theme.fourthRing)
-      fillCircle(fourthInner, theme.innerBackground)
+      fillCircle(fourthInner, themeName === 'classic' ? '#1f2e5c' : theme.innerBackground)
 
-      context.strokeStyle = theme.line
+      const strokeCircle = (circleRadius: number) => {
+        context.beginPath()
+        context.arc(center.x, center.y, circleRadius, 0, Math.PI * 2)
+        context.stroke()
+      }
+      context.strokeStyle = themeName === 'stardust' ? '#c5c1b8' : theme.line
       context.lineWidth = uiScale
-      ;[radius, zodiacInner, secondInner, thirdInner, fourthInner]
-        .filter((value, index, values) => value > 0 && values.indexOf(value) === index)
-        .forEach((circleRadius) => {
-          context.beginPath()
-          context.arc(center.x, center.y, circleRadius, 0, Math.PI * 2)
-          context.stroke()
-        })
+      if (themeName !== 'stardust') {
+        strokeCircle(radius)
+      }
+      if (themeName === 'degree') {
+        strokeCircle(zodiacInner)
+      }
+      if (themeName !== 'classic') {
+        strokeCircle(secondInner)
+        strokeCircle(thirdInner)
+        strokeCircle(fourthInner)
+      }
 
       if (themeName === 'classic') {
         context.strokeStyle = '#4c77a2'
+        const tickRingWidth = thirdInner - fourthInner
         for (let degree = 0; degree < 360; degree += 1) {
           const tickLength = degree % 30 === 0 ? 0.5 : degree % 5 === 0 ? 0.34 : 0.22
-          const outer = pointOnCircle(center, radius, degree, ascDegree)
-          const inner = pointOnCircle(center, radius - (radius - zodiacInner) * tickLength, degree, ascDegree)
+          const outer = pointOnCircle(center, thirdInner, degree, ascDegree)
+          const inner = pointOnCircle(center, thirdInner - tickRingWidth * tickLength, degree, ascDegree)
           context.lineWidth = (degree % 30 === 0 ? 0.8 : 0.45) * uiScale
           context.beginPath()
           context.moveTo(outer.x, outer.y)
@@ -869,7 +892,31 @@ Component({
               : isAxis
                 ? '#8c8c8c'
                 : theme.subtleLine
-        context.lineWidth = (isAxis ? 1.7 : 0.8) * uiScale
+        context.lineWidth = (themeName === 'classic' ? 0.8 : isAxis ? 1.8 : 0.8) * uiScale
+        context.beginPath()
+        context.moveTo(start.x, start.y)
+        context.lineTo(end.x, end.y)
+        context.stroke()
+      })
+    },
+
+    drawClassicAxes(
+      context: WechatMiniprogram.CanvasRenderingContext.CanvasRenderingContext2D,
+      center: Point,
+      radius: number,
+      ascDegree: number,
+      houses: House[],
+      uiScale: number,
+    ) {
+      const houseById = new Map(houses.map((house) => [house.house_id, house]))
+      context.strokeStyle = '#96af99'
+      context.lineWidth = 2 * uiScale
+      ;[[1, 7], [10, 4]].forEach(([startHouseId, endHouseId]) => {
+        const startHouse = houseById.get(startHouseId)
+        const endHouse = houseById.get(endHouseId)
+        if (!startHouse || !endHouse) return
+        const start = pointOnCircle(center, radius, startHouse.longitude, ascDegree)
+        const end = pointOnCircle(center, radius, endHouse.longitude, ascDegree)
         context.beginPath()
         context.moveTo(start.x, start.y)
         context.lineTo(end.x, end.y)
@@ -897,9 +944,10 @@ Component({
           const targetLongitude = planetByCode.get(aspect.code_name)?.longitude ?? aspect.current_longitude
           const start = pointOnCircle(center, radius, planet.longitude, ascDegree)
           const end = pointOnCircle(center, radius, targetLongitude, ascDegree)
-          context.strokeStyle = ASPECT_COLORS[Math.round(aspect.allow)] ?? '#327cf2'
-          context.globalAlpha = themeName === 'classic' ? 0.9 : 0.78
-          context.lineWidth = (themeName === 'classic' ? 0.95 : 0.62) * uiScale
+          const aspectColor = ASPECT_COLORS[Math.round(aspect.allow)] ?? '#327cf2'
+          context.strokeStyle = themeName === 'classic' ? mixHexWithWhite(aspectColor, 0.18) : aspectColor
+          context.globalAlpha = themeName === 'classic' ? 1 : 0.78
+          context.lineWidth = (themeName === 'classic' ? 0.96 : 0.6) * uiScale
           context.beginPath()
           context.moveTo(start.x, start.y)
           context.lineTo(end.x, end.y)
@@ -957,7 +1005,7 @@ Component({
       context.textBaseline = 'middle'
       planets.forEach((planet) => {
         const angle = displayAngles[planet.code_name] ?? planet.longitude
-        const point = pointOnCircle(center, radius, angle, ascDegree)
+        const point = pointOnCircle(center, themeName === 'classic' ? radius * 0.92 : radius, angle, ascDegree)
         runtimeByInstance.get(this)?.detailTargets.push({
           x: point.x,
           y: point.y,
@@ -965,23 +1013,30 @@ Component({
           type: 'planet',
           key: planet.code_name,
         })
-        const anchor = pointOnCircle(center, radius + 10 * uiScale, planet.longitude, ascDegree)
         const planetColor = PLANET_COLORS[planet.code_name] ?? theme.text
         const color = themeName === 'classic' ? mixHexWithWhite(planetColor, 0.28) : planetColor
         const isRetrograde = Number(planet.speed) < 0
 
-        if (Math.abs(normalizeAngle(angle - planet.longitude)) > 0.6) {
-          context.strokeStyle = theme.secondaryText
-          context.globalAlpha = 0.48
-          context.lineWidth = 0.6 * uiScale
+        if (themeName === 'classic') {
+          const marker = pointOnCircle(center, radius * 0.75, planet.longitude, ascDegree)
+          const markerRadius = Math.max(2.4, Math.min(radius * 0.018, 4))
+          context.strokeStyle = color
+          context.globalAlpha = 0.75
+          context.lineWidth = 0.55 * uiScale
           context.beginPath()
-          context.moveTo(anchor.x, anchor.y)
+          context.moveTo(marker.x, marker.y)
           context.lineTo(point.x, point.y)
           context.stroke()
           context.globalAlpha = 1
-        }
 
-        if (themeName === 'classic') {
+          context.beginPath()
+          context.arc(marker.x, marker.y, markerRadius, 0, Math.PI * 2)
+          context.fillStyle = '#1f2e5c'
+          context.fill()
+          context.strokeStyle = planetColor
+          context.lineWidth = 1.1 * uiScale
+          context.stroke()
+
           const glyphs = style === 'symbol' ? ixingpanGlyphs : ixingpanCnGlyphs
           const drewGlyph = drawVectorGlyph(
             context,
@@ -989,12 +1044,12 @@ Component({
             planet.planet_font,
             point.x,
             point.y,
-            (style === 'symbol' ? 17 * SYMBOL_SIZE_FACTOR : 11) * uiScale,
+            (style === 'symbol' ? 15 : 11) * uiScale,
             color,
           )
           if (!drewGlyph) {
             context.fillStyle = color
-            context.font = `${(style === 'symbol' ? 17 * SYMBOL_SIZE_FACTOR : 10) * uiScale}px sans-serif`
+            context.font = `${(style === 'symbol' ? 15 : 11) * uiScale}px sans-serif`
             context.fillText(style === 'symbol' ? PLANET_SYMBOLS[planet.code_name] ?? '·' : planet.planet_chinese, point.x, point.y)
           }
           return
