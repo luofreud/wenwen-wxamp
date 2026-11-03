@@ -1,6 +1,42 @@
 // pages/index/index.ts
-import { getAssessmentTypes, getLiveEvents } from '../../services/index'
-import type { AssessmentType, LiveEvent } from '../../services/index'
+import { getAssessmentTypes, getLiveEvents, requestXingpango } from '../../services/index'
+import type { Archive, AssessmentType, LiveEvent } from '../../services/index'
+import { archiveStore } from '../../stores/index'
+import type { ArchiveState } from '../../stores/index'
+
+type FortuneState = 'archive-loading' | 'fortune-loading' | 'empty' | 'ready' | 'error'
+
+interface FortuneScoreItem {
+  label: string
+  score: number
+  scoreText: string
+  tone: 'love' | 'health' | 'wealth'
+}
+
+interface FortuneLuckItem {
+  icon: string
+  value: string
+  label: string
+  tone: 'flower' | 'gem' | 'color' | 'number'
+}
+
+interface DailyFortune {
+  love: number
+  career: number
+  wealth: number
+  overall: number
+  luckyNumber: number | null
+  luckyFlower: string
+  luckyColor: string
+  luckyStone: string
+}
+
+interface HomeFortuneRuntime {
+  archiveKey: string
+  requestId: number
+  storeInitialized: boolean
+  unsubscribe: (() => void) | null
+}
 
 interface HomeLiveEvent extends LiveEvent {
   detailUrl: string
@@ -26,37 +62,280 @@ const MORE_REPORT_TONES: MoreAssessment['tone'][] = [
   'rose',
 ]
 
+const FORTUNE_PATH = '/astrology/luck/day' as const
+const homeFortuneRuntime = new WeakMap<object, HomeFortuneRuntime>()
+
+function createHomeFortuneRuntime(): HomeFortuneRuntime {
+  return {
+    archiveKey: '',
+    requestId: 0,
+    storeInitialized: false,
+    unsubscribe: null,
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null
+    ? value as Record<string, unknown>
+    : null
+}
+
+function readNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (value == null || (typeof value === 'string' && value.trim() === '')) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function readText(value: unknown): string {
+  return value == null ? '' : String(value).trim()
+}
+
+function score(value: unknown): number {
+  return Math.max(0, Math.min(100, readNumber(value) ?? 0))
+}
+
+function parseDailyFortune(value: unknown): DailyFortune {
+  const data = asRecord(value)
+  if (!data) throw new Error('今日运势数据格式错误')
+  const scores = asRecord(data.scores)
+
+  return {
+    love: score(scores?.love ?? data.love),
+    career: score(scores?.career ?? data.career),
+    wealth: score(scores?.wealth ?? data.wealth),
+    overall: score(scores?.overall ?? data.average),
+    luckyNumber: readNumber(data.lucky_number),
+    luckyFlower: readText(data.lucky_flower),
+    luckyColor: readText(data.lucky_color),
+    luckyStone: readText(data.lucky_stone),
+  }
+}
+
+function roundScore(value: number): number {
+  return Math.round(value)
+}
+
+function formatNumber(value: number | null): string {
+  if (value === null) return '--'
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)))
+}
+
+function formatArchiveBirthday(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(value.trim())
+  if (!match) throw new Error('当前档案的出生时间格式无效')
+  return `${match[1]}-${match[2]}-${match[3]} ${match[4]}:${match[5]}:${match[6] ?? '00'}`
+}
+
+function formatDate(value: Date): string {
+  const pad = (part: number): string => String(part).padStart(2, '0')
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`
+}
+
+function archiveFortuneKey(archive: Archive, date: string): string {
+  return [
+    archive.id,
+    archive.birth_time,
+    archive.birth_longitude,
+    archive.birth_latitude,
+    archive.current_longitude,
+    archive.current_latitude,
+    archive.timezone,
+    archive.updated_at,
+    date,
+  ].join('|')
+}
+
+function fortuneScores(fortune: DailyFortune): FortuneScoreItem[] {
+  return [
+    { label: '爱情', score: roundScore(fortune.love), scoreText: String(roundScore(fortune.love)), tone: 'love' },
+    { label: '事业', score: roundScore(fortune.career), scoreText: String(roundScore(fortune.career)), tone: 'health' },
+    { label: '财富', score: roundScore(fortune.wealth), scoreText: String(roundScore(fortune.wealth)), tone: 'wealth' },
+  ]
+}
+
+function fortuneLuckItems(fortune: DailyFortune): FortuneLuckItem[] {
+  return [
+    { icon: '🌷', value: fortune.luckyFlower || '--', label: '幸运花', tone: 'flower' },
+    { icon: '◆', value: fortune.luckyStone || '--', label: '幸运石', tone: 'gem' },
+    { icon: '', value: fortune.luckyColor || '--', label: '幸运色', tone: 'color' },
+    { icon: formatNumber(fortune.luckyNumber), value: `数字 ${formatNumber(fortune.luckyNumber)}`, label: '幸运数', tone: 'number' },
+  ]
+}
+
+function placeholderScores(): FortuneScoreItem[] {
+  return [
+    { label: '爱情', score: 0, scoreText: '--', tone: 'love' },
+    { label: '事业', score: 0, scoreText: '--', tone: 'health' },
+    { label: '财富', score: 0, scoreText: '--', tone: 'wealth' },
+  ]
+}
+
+function placeholderLuckItems(): FortuneLuckItem[] {
+  return [
+    { icon: '🌷', value: '--', label: '幸运花', tone: 'flower' },
+    { icon: '◆', value: '--', label: '幸运石', tone: 'gem' },
+    { icon: '', value: '--', label: '幸运色', tone: 'color' },
+    { icon: '--', value: '数字 --', label: '幸运数', tone: 'number' },
+  ]
+}
+
 Page({
   data: {
     navigationReady: false,
     navigationBarHeight: 0,
     statusBarHeight: 0,
     liveEvent: null as HomeLiveEvent | null,
-    moodBars: [
-      { label: '爱情', score: 80, tone: 'love' },
-      { label: '健康', score: 90, tone: 'health' },
-      { label: '财富', score: 70, tone: 'wealth' },
-    ],
-    luckItems: [
-      { icon: '🌷', value: '紫色郁金香', label: '幸运花', tone: 'flower' },
-      { icon: '◆', value: '蓝宝石', label: '幸运石', tone: 'gem' },
-      { icon: '', value: '藏红色', label: '幸运色', tone: 'color' },
-      { icon: '6', value: '数字 6', label: '幸运数', tone: 'number' },
-    ],
+    fortuneState: 'archive-loading' as FortuneState,
+    fortuneUserName: '',
+    moodScoreText: '--',
+    moodBars: placeholderScores(),
+    luckItems: placeholderLuckItems(),
     reports: [] as FeaturedAssessment[],
     moreReports: [] as MoreAssessment[],
   },
 
   onLoad() {
+    homeFortuneRuntime.set(this, createHomeFortuneRuntime())
     this.initNavigation()
+    this.bindArchiveStore()
   },
 
   onShow() {
     if (!this.data.navigationReady) {
       this.initNavigation()
     }
+    const runtime = homeFortuneRuntime.get(this)
+    if (runtime?.storeInitialized) {
+      this.syncFortuneFromArchiveState(archiveStore.getSnapshot())
+    }
     void this.loadLiveEvent()
     void this.loadAssessmentTypes()
+  },
+
+  onUnload() {
+    const runtime = homeFortuneRuntime.get(this)
+    runtime?.unsubscribe?.()
+    if (runtime) runtime.requestId += 1
+    homeFortuneRuntime.delete(this)
+  },
+
+  bindArchiveStore() {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime) return
+
+    runtime.unsubscribe = archiveStore.subscribe((snapshot) => {
+      if (runtime.storeInitialized) {
+        this.syncFortuneFromArchiveState(snapshot)
+      }
+    })
+
+    void archiveStore.init()
+      .then(() => {
+        const currentRuntime = homeFortuneRuntime.get(this)
+        if (!currentRuntime) return
+        currentRuntime.storeInitialized = true
+        this.syncFortuneFromArchiveState(archiveStore.getSnapshot())
+      })
+      .catch(() => {
+        if (!homeFortuneRuntime.has(this)) return
+        this.setFortunePlaceholder('error', '')
+      })
+  },
+
+  syncFortuneFromArchiveState(snapshot: Readonly<ArchiveState>) {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime) return
+
+    if (snapshot.isLoading) {
+      if (this.data.fortuneState !== 'ready') {
+        this.setFortunePlaceholder('archive-loading', '')
+      }
+      return
+    }
+
+    const archive = archiveStore.selectedArchive
+    if (!archive) {
+      runtime.archiveKey = ''
+      runtime.requestId += 1
+      this.setData({
+        fortuneState: 'empty',
+        fortuneUserName: '',
+      })
+      return
+    }
+
+    const today = formatDate(new Date())
+    const nextArchiveKey = archiveFortuneKey(archive, today)
+    if (runtime.archiveKey === nextArchiveKey) return
+    runtime.archiveKey = nextArchiveKey
+    void this.loadDailyFortune(archive, today)
+  },
+
+  async loadDailyFortune(archive: Archive, date: string): Promise<void> {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime) return
+
+    const requestId = runtime.requestId + 1
+    runtime.requestId = requestId
+    this.setFortunePlaceholder('fortune-loading', archive.name)
+
+    const longitude = archive.current_longitude ?? archive.birth_longitude
+    const latitude = archive.current_latitude ?? archive.birth_latitude
+    if (longitude === null || latitude === null) {
+      this.setFortunePlaceholder('error', archive.name)
+      return
+    }
+
+    try {
+      const response = await requestXingpango<unknown>({
+        path: FORTUNE_PATH,
+        longitude,
+        latitude,
+        tz: archive.timezone,
+        birthday: formatArchiveBirthday(archive.birth_time),
+        date,
+      })
+
+      const currentRuntime = homeFortuneRuntime.get(this)
+      if (!currentRuntime || currentRuntime.requestId !== requestId) return
+      if (response.code !== 200) {
+        throw new Error(response.msg || '今日运势加载失败')
+      }
+
+      const fortune = parseDailyFortune(response.data)
+      this.setData({
+        fortuneState: 'ready',
+        fortuneUserName: archive.name,
+        moodScoreText: String(roundScore(fortune.overall)),
+        moodBars: fortuneScores(fortune),
+        luckItems: fortuneLuckItems(fortune),
+      })
+    } catch {
+      const currentRuntime = homeFortuneRuntime.get(this)
+      if (!currentRuntime || currentRuntime.requestId !== requestId) return
+      this.setFortunePlaceholder('error', archive.name)
+    }
+  },
+
+  setFortunePlaceholder(state: FortuneState, archiveName: string) {
+    this.setData({
+      fortuneState: state,
+      fortuneUserName: archiveName,
+      moodScoreText: '--',
+      moodBars: placeholderScores(),
+      luckItems: placeholderLuckItems(),
+    })
+  },
+
+  handleFortuneCardTap() {
+    if (this.data.fortuneState !== 'error') return
+    const archive = archiveStore.selectedArchive
+    if (!archive) return
+    const date = formatDate(new Date())
+    const runtime = homeFortuneRuntime.get(this)
+    if (runtime) runtime.archiveKey = archiveFortuneKey(archive, date)
+    void this.loadDailyFortune(archive, date)
   },
 
   async loadAssessmentTypes(): Promise<void> {

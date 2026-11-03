@@ -12,18 +12,40 @@
     />
   </view>
 
-  <view class="mood-card">
+  <view wx:if="{{fortuneState === 'empty'}}" class="mood-card">
     <view class="mood-content">
-      <text class="user-name">北边最大最大最大的鱼</text>
+      <text class="user-name">今天的心情，想被看见吗？</text>
+      <view class="mood-columns">
+        <view class="mood-overview">
+          <view class="score-heading">
+            <text class="score-label">添加档案，让星星陪你读懂此刻的自己</text>
+          </view>
+        </view>
+        <view class="luck-grid">
+          <navigator class="luck-card" url="/pages/archives/edit" hover-class="content-card--pressed">
+            <view class="luck-icon luck-icon--number">+</view>
+            <view class="luck-copy">
+              <text class="luck-value">立即添加</text>
+              <text class="luck-label">创建档案</text>
+            </view>
+          </navigator>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="mood-card" bindtap="handleFortuneCardTap">
+    <view class="mood-content">
+      <text class="user-name">{{fortuneUserName || '档案加载中…'}}</text>
       <view class="mood-columns">
         <view class="mood-overview">
           <view class="score-heading">
             <text class="score-label">今日心情</text>
-            <text class="score-value">80<text class="score-unit">分</text></text>
+            <text class="score-value">{{moodScoreText}}<text class="score-unit">分</text></text>
           </view>
           <view class="mood-bars">
             <view wx:for="{{moodBars}}" wx:key="label" class="mood-bar-item">
-              <text class="bar-score">{{item.score}}分</text>
+              <text class="bar-score">{{item.scoreText}}分</text>
               <view class="bar-track">
                 <view
                   class="bar-fill bar-fill--{{item.tone}}"

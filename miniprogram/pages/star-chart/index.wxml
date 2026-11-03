@@ -14,7 +14,7 @@
   </view>
 
   <view class="page-heading">
-    <text class="page-title">一个了不起的名字</text>
+    <text class="page-title">{{archiveName}}</text>
     <view class="heading-actions">
       <view class="icon-button" hover-class="icon-button--pressed" role="button" aria-label="切换用户">
         <image class="heading-icon" src="/assets/icons/switch.png" mode="aspectFit" />
