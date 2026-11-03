@@ -86,63 +86,89 @@
         </view>
         <view class="checkin-copy">
           <text class="checkin-title">签到领奖励</text>
-          <text class="checkin-subtitle">连续签到7天可以获得额外奖励！</text>
+          <text wx:if="{{checkInStatus}}" class="checkin-subtitle">连续签到 {{checkInStatus.consecutive_days}} 天 · 累计 {{checkInStatus.total_days}} 天</text>
+          <text wx:else class="checkin-subtitle">每天签到，积攒属于你的星光</text>
         </view>
       </view>
-      <button class="checkin-button" hover-class="checkin-button--pressed">签到</button>
+      <view wx:if="{{checkInStatus}}" class="balance-chip">
+        <text class="balance-chip__star">★</text>
+        <text>{{checkInStatus.star_coin_balance}}</text>
+      </view>
     </view>
 
-    <view class="checkin-grid">
-      <view class="day-card day-card--today">
-        <text class="day-label">今天</text>
-        <view class="coin" aria-hidden="true"><text>★</text></view>
-        <text class="reward-number">+1</text>
-      </view>
-      <view class="day-card">
-        <text class="day-label">第二天</text>
-        <view class="coin" aria-hidden="true"><text>★</text></view>
-        <text class="reward-number">+1</text>
-      </view>
-      <view class="day-card">
-        <text class="day-label">第三天</text>
-        <view class="coin" aria-hidden="true"><text>★</text></view>
-        <text class="reward-number">+2</text>
-      </view>
-      <view class="day-card">
-        <text class="day-label">第四天</text>
-        <view class="coin" aria-hidden="true"><text>★</text></view>
-        <text class="reward-number">+2</text>
-      </view>
-      <view class="day-card">
-        <text class="day-label">第五天</text>
-        <view class="coin" aria-hidden="true"><text>★</text></view>
-        <text class="reward-number">+3</text>
-      </view>
-      <view class="day-card">
-        <text class="day-label">第六天</text>
-        <view class="coin" aria-hidden="true"><text>★</text></view>
-        <text class="reward-number">+3</text>
-      </view>
-      <view class="day-card day-card--bonus">
-        <view class="bonus-coin">
-          <text class="day-label">第七天</text>
-          <view class="coin coin--large" aria-hidden="true"><text>★</text></view>
-          <text class="reward-number">+5</text>
-        </view>
-        <view class="bonus-coupon">
-          <view class="gift" aria-hidden="true">
-            <view class="gift__bow"></view>
-            <view class="gift__box"></view>
-          </view>
-          <text class="coupon-text">免单券</text>
-        </view>
-      </view>
+    <view wx:if="{{isCheckInLoading}}" class="checkin-loading">
+      <view wx:for="{{[1, 2, 3, 4]}}" wx:key="*this" class="checkin-loading__day"></view>
     </view>
+
+    <view wx:elif="{{checkInError}}" class="checkin-error">
+      <text class="checkin-error__text">{{checkInError}}</text>
+      <button class="checkin-retry" bindtap="retryCheckInStatus">重新加载</button>
+    </view>
+
+    <block wx:elif="{{checkInStatus}}">
+      <view class="checkin-progress">
+        <text>第 {{checkInStatus.reward_round}} 轮</text>
+        <text wx:if="{{nextMilestone}}">下个目标 · 连续 {{nextMilestone.target_day}} 天</text>
+        <text wx:elif="{{hasRewardMilestones}}">本轮里程碑已达成</text>
+        <text wx:else>长期进度 {{checkInStatus.reward_progress_day}}/{{checkInStatus.reward_round_length}}</text>
+      </view>
+
+      <view wx:if="{{nextMilestone}}" class="milestone-card">
+        <view class="milestone-copy">
+          <text class="milestone-title">再签到 {{nextMilestone.remainingDays}} 天解锁</text>
+          <text class="milestone-reward">额外 +{{nextMilestone.reward_star_coins}} 星币</text>
+        </view>
+        <view class="milestone-track">
+          <view class="milestone-fill" style="width: {{nextMilestone.progressPercent}}%;"></view>
+        </view>
+      </view>
+
+      <view class="checkin-grid">
+        <view
+          wx:for="{{checkInDays}}"
+          wx:key="cycle_day"
+          class="day-card {{item.isCurrent ? 'day-card--today' : ''}} {{item.isChecked ? 'day-card--checked' : ''}} {{item.isSeventh ? 'day-card--bonus' : ''}}"
+          data-can-check-in="{{item.isCurrent && !checkInStatus.has_checked_in}}"
+          bindtap="handleCycleDayTap"
+          role="button"
+          aria-label="{{item.label}}，奖励{{item.reward_star_coins}}星币"
+        >
+          <block wx:if="{{!item.isSeventh}}">
+            <text class="day-label">{{item.label}}</text>
+            <view class="coin" aria-hidden="true"><text>★</text></view>
+            <text class="reward-number">+{{item.reward_star_coins}}</text>
+          </block>
+          <block wx:else>
+            <view class="bonus-coin">
+              <text class="day-label">{{item.label}}</text>
+              <view class="coin coin--large" aria-hidden="true"><text>★</text></view>
+              <text class="reward-number">+{{item.reward_star_coins}}</text>
+            </view>
+            <view class="bonus-coupon">
+              <view class="gift" aria-hidden="true">
+                <view class="gift__bow"></view>
+                <view class="gift__box"></view>
+              </view>
+              <text class="coupon-text">额外奖励</text>
+              <text class="coupon-extra">+{{item.bonusRewardStarCoins}} 星币</text>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <button
+        class="checkin-button checkin-button--wide {{checkInStatus.has_checked_in ? 'checkin-button--done' : ''}}"
+        hover-class="checkin-button--pressed"
+        loading="{{isCheckingIn}}"
+        disabled="{{isCheckingIn || checkInStatus.has_checked_in}}"
+        bindtap="submitCheckIn"
+      >{{isCheckingIn ? '签到中' : (checkInStatus.has_checked_in ? '今日已签到' : '立即签到 · +' + checkInStatus.today_reward_star_coins + ' 星币')}}</button>
+    </block>
   </view>
 
   <view class="notice-banner">
     <view class="notice-icon" aria-hidden="true">!</view>
-    <text class="notice-text">七日签到的免单券只能在app使用哦</text>
+    <text class="notice-text">连续签到达成里程碑，还可获得额外星币奖励</text>
     <view class="notice-arrow" aria-hidden="true"></view>
   </view>
 

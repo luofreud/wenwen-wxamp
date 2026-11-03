@@ -35,6 +35,7 @@ const checkIn = (): Promise<ApiResponse<CheckInResult>> => {
   return http<CheckInResult>({
     url: '/check-ins',
     method: 'POST',
+    params: {},
   })
 }
 

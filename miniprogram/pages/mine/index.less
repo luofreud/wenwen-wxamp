@@ -317,6 +317,75 @@ page {
   transform: scale(0.97);
 }
 
+.balance-chip {
+  display: flex;
+  align-items: center;
+  height: 52rpx;
+  padding: 0 18rpx;
+  border: 1rpx solid rgba(229, 171, 0, 0.18);
+  border-radius: 26rpx;
+  color: #765200;
+  font-size: 24rpx;
+  font-weight: 700;
+  background: rgba(255, 245, 191, 0.78);
+}
+
+.balance-chip__star {
+  margin-right: 8rpx;
+  color: #e2a400;
+}
+
+.checkin-progress {
+  display: flex;
+  justify-content: space-between;
+  margin: -4rpx 2rpx 20rpx;
+  color: #92899a;
+  font-size: 21rpx;
+  line-height: 1.4;
+}
+
+.milestone-card {
+  margin: -4rpx 0 22rpx;
+  padding: 18rpx 20rpx;
+  border: 1rpx solid rgba(126, 79, 190, 0.1);
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, rgba(247, 241, 255, 0.94), rgba(252, 249, 255, 0.94));
+}
+
+.milestone-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.milestone-title {
+  color: #65556f;
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.milestone-reward {
+  color: #8251be;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.milestone-track {
+  height: 8rpx;
+  margin-top: 14rpx;
+  overflow: hidden;
+  border-radius: 4rpx;
+  background: #e9e0f3;
+}
+
+.milestone-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  background: linear-gradient(90deg, #a878df, #7650b2);
+  transition: width 240ms ease;
+}
+
 .checkin-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -351,6 +420,23 @@ page {
   background: #f5c526;
   content: '';
   transform: translateX(-50%);
+}
+
+.day-card--checked {
+  border-color: rgba(126, 86, 190, 0.15);
+  background: linear-gradient(180deg, #f5f0fc 0%, #f0e9fa 100%);
+}
+
+.day-card--checked .coin {
+  border-color: #9c78c9;
+  color: #7650aa;
+  background: linear-gradient(145deg, #e3d4f5, #bea0e2);
+  filter: saturate(0.72);
+}
+
+.day-card--checked .day-label,
+.day-card--checked .reward-number {
+  color: #765e8e;
 }
 
 .day-label {
@@ -467,6 +553,89 @@ page {
   color: #b56b00;
   font-size: 21rpx;
   font-weight: 700;
+}
+
+.coupon-extra {
+  margin-top: 3rpx;
+  color: #c37800;
+  font-size: 19rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.checkin-button--wide {
+  width: 100%;
+  height: 72rpx;
+  margin: 26rpx 0 0;
+  border-radius: 36rpx;
+  font-size: 27rpx;
+  line-height: 72rpx;
+}
+
+.checkin-button--done {
+  color: #817789;
+  background: #eeeaf1;
+  box-shadow: none;
+}
+
+.checkin-loading {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14rpx;
+}
+
+.checkin-loading__day {
+  height: 140rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(90deg, #f0edf3 0%, #faf9fb 50%, #f0edf3 100%);
+  background-size: 200% 100%;
+  animation: checkin-shimmer 1.35s ease-in-out infinite;
+}
+
+.checkin-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 92rpx;
+  padding: 20rpx 22rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #fff4f5;
+}
+
+.checkin-error__text {
+  min-width: 0;
+  flex: 1;
+  color: #b75762;
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+.checkin-retry {
+  width: 132rpx;
+  height: 54rpx;
+  margin: 0 0 0 20rpx;
+  padding: 0;
+  border: 0;
+  border-radius: 27rpx;
+  color: #a94754;
+  font-size: 22rpx;
+  line-height: 54rpx;
+  background: #ffe3e7;
+}
+
+.checkin-retry::after {
+  border: 0;
+}
+
+@keyframes checkin-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .notice-banner {
