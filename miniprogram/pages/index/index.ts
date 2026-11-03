@@ -33,6 +33,7 @@ interface DailyFortune {
 
 interface HomeFortuneRuntime {
   archiveKey: string
+  dataLoadId: number
   requestId: number
   storeInitialized: boolean
   unsubscribe: (() => void) | null
@@ -68,6 +69,7 @@ const homeFortuneRuntime = new WeakMap<object, HomeFortuneRuntime>()
 function createHomeFortuneRuntime(): HomeFortuneRuntime {
   return {
     archiveKey: '',
+    dataLoadId: 0,
     requestId: 0,
     storeInitialized: false,
     unsubscribe: null,
@@ -185,6 +187,9 @@ Page({
     navigationReady: false,
     navigationBarHeight: 0,
     statusBarHeight: 0,
+    pageHeight: 0,
+    scrollViewHeight: 0,
+    dataReady: false,
     liveEvent: null as HomeLiveEvent | null,
     fortuneState: 'archive-loading' as FortuneState,
     fortuneUserName: '',
@@ -205,18 +210,20 @@ Page({
     if (!this.data.navigationReady) {
       this.initNavigation()
     }
-    const runtime = homeFortuneRuntime.get(this)
-    if (runtime?.storeInitialized) {
-      this.syncFortuneFromArchiveState(archiveStore.getSnapshot())
-    }
-    void this.loadLiveEvent()
-    void this.loadAssessmentTypes()
+    void this.loadHomeData()
+  },
+
+  onResize() {
+    this.initNavigation()
   },
 
   onUnload() {
     const runtime = homeFortuneRuntime.get(this)
     runtime?.unsubscribe?.()
-    if (runtime) runtime.requestId += 1
+    if (runtime) {
+      runtime.dataLoadId += 1
+      runtime.requestId += 1
+    }
     homeFortuneRuntime.delete(this)
   },
 
@@ -226,24 +233,44 @@ Page({
 
     runtime.unsubscribe = archiveStore.subscribe((snapshot) => {
       if (runtime.storeInitialized) {
-        this.syncFortuneFromArchiveState(snapshot)
+        void this.syncFortuneFromArchiveState(snapshot)
       }
     })
-
-    void archiveStore.init()
-      .then(() => {
-        const currentRuntime = homeFortuneRuntime.get(this)
-        if (!currentRuntime) return
-        currentRuntime.storeInitialized = true
-        this.syncFortuneFromArchiveState(archiveStore.getSnapshot())
-      })
-      .catch(() => {
-        if (!homeFortuneRuntime.has(this)) return
-        this.setFortunePlaceholder('error', '')
-      })
   },
 
-  syncFortuneFromArchiveState(snapshot: Readonly<ArchiveState>) {
+  async loadHomeData(): Promise<void> {
+    const runtime = homeFortuneRuntime.get(this)
+    if (!runtime) return
+
+    const dataLoadId = runtime.dataLoadId + 1
+    runtime.dataLoadId = dataLoadId
+    this.setData({ dataReady: false })
+
+    await Promise.all([
+      this.loadArchiveFortune(),
+      this.loadLiveEvent(),
+      this.loadAssessmentTypes(),
+    ])
+
+    const currentRuntime = homeFortuneRuntime.get(this)
+    if (!currentRuntime || currentRuntime.dataLoadId !== dataLoadId) return
+    this.setData({ dataReady: true })
+  },
+
+  async loadArchiveFortune(): Promise<void> {
+    try {
+      await archiveStore.init()
+      const runtime = homeFortuneRuntime.get(this)
+      if (!runtime) return
+      runtime.storeInitialized = true
+      await this.syncFortuneFromArchiveState(archiveStore.getSnapshot())
+    } catch {
+      if (!homeFortuneRuntime.has(this)) return
+      this.setFortunePlaceholder('error', '')
+    }
+  },
+
+  async syncFortuneFromArchiveState(snapshot: Readonly<ArchiveState>): Promise<void> {
     const runtime = homeFortuneRuntime.get(this)
     if (!runtime) return
 
@@ -269,7 +296,7 @@ Page({
     const nextArchiveKey = archiveFortuneKey(archive, today)
     if (runtime.archiveKey === nextArchiveKey) return
     runtime.archiveKey = nextArchiveKey
-    void this.loadDailyFortune(archive, today)
+    await this.loadDailyFortune(archive, today)
   },
 
   async loadDailyFortune(archive: Archive, date: string): Promise<void> {
@@ -325,6 +352,12 @@ Page({
       moodScoreText: '--',
       moodBars: placeholderScores(),
       luckItems: placeholderLuckItems(),
+    })
+  },
+
+  switchToMine() {
+    wx.switchTab({
+      url: '/pages/mine/index',
     })
   },
 
@@ -392,9 +425,11 @@ Page({
       const menuButton = wx.getMenuButtonBoundingClientRect()
       const statusBarHeight = windowInfo.statusBarHeight
       const navigationBarHeight = menuButton.bottom + menuButton.top - statusBarHeight
+      const pageHeight = windowInfo.windowHeight
 
       if (
         windowInfo.windowWidth <= 0 ||
+        pageHeight <= 0 ||
         statusBarHeight < 0 ||
         menuButton.width <= 0 ||
         menuButton.height <= 0 ||
@@ -407,6 +442,8 @@ Page({
         navigationReady: true,
         navigationBarHeight: Math.ceil(navigationBarHeight),
         statusBarHeight: Math.ceil(statusBarHeight),
+        pageHeight: Math.ceil(pageHeight),
+        scrollViewHeight: Math.max(0, Math.floor(pageHeight - navigationBarHeight)),
       })
     } catch (error) {
       console.warn('获取导航栏尺寸失败', error)

@@ -1,5 +1,9 @@
 <!-- pages/index/index.wxml -->
-<view wx:if="{{navigationReady}}" class="home-page">
+<view
+  wx:if="{{navigationReady}}"
+  class="home-page"
+  style="height: {{pageHeight}}px; min-height: {{pageHeight}}px; max-height: {{pageHeight}}px;"
+>
   <view
     class="navigation-bar"
     style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
@@ -12,12 +16,44 @@
     />
   </view>
 
-  <view wx:if="{{fortuneState === 'empty'}}" class="mood-card">
+  <scroll-view
+    class="home-scroll"
+    style="height: {{scrollViewHeight}}px;"
+    scroll-y="{{true}}"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+  >
+    <view wx:if="{{!dataReady}}" class="home-loading" aria-label="首页数据加载中">
+      <view class="loading-orbit" aria-hidden="true">
+        <view class="loading-core"></view>
+      </view>
+      <text class="loading-text">正在读取今日星象…</text>
+    </view>
+    <view wx:else class="home-content">
+  <view wx:if="{{fortuneState === 'empty'}}" class="mood-card mood-card--empty">
+    <image
+      class="mood-card__background"
+      src="/assets/images/emo-background.png"
+      mode="widthFix"
+      aria-hidden="true"
+    />
     <view class="mood-content">
+      <view
+        class="mood-mine-action"
+        catchtap="switchToMine"
+        role="button"
+        aria-label="前往我的页面签到"
+      ></view>
       <text class="user-name">今天的心情，想被看见吗？</text>
       <view class="mood-columns">
         <view class="mood-overview">
           <view class="score-heading">
+            <image
+              class="score-background"
+              src="/assets/images/score-background.png"
+              mode="scaleToFill"
+              aria-hidden="true"
+            />
             <text class="score-label">添加档案，让星星陪你读懂此刻的自己</text>
           </view>
         </view>
@@ -35,13 +71,34 @@
   </view>
 
   <view wx:else class="mood-card" bindtap="handleFortuneCardTap">
+    <image
+      class="mood-card__background"
+      src="/assets/images/emo-background.png"
+      mode="widthFix"
+      aria-hidden="true"
+    />
     <view class="mood-content">
+      <view
+        class="mood-mine-action"
+        catchtap="switchToMine"
+        role="button"
+        aria-label="前往我的页面签到"
+      ></view>
       <text class="user-name">{{fortuneUserName || '档案加载中…'}}</text>
       <view class="mood-columns">
         <view class="mood-overview">
           <view class="score-heading">
-            <text class="score-label">今日心情</text>
-            <text class="score-value">{{moodScoreText}}<text class="score-unit">分</text></text>
+            <image
+              class="score-background"
+              src="/assets/images/score-background.png"
+              mode="heightFix"
+              aria-hidden="true"
+            />
+            <view class="score-title">
+              <text class="score-title-label">今日心情</text>
+              <text class="score-number">{{moodScoreText}}</text>
+              <text class="score-unit">分</text>
+            </view>
           </view>
           <view class="mood-bars">
             <view wx:for="{{moodBars}}" wx:key="label" class="mood-bar-item">
@@ -74,6 +131,12 @@
   </view>
 
   <view wx:if="{{liveEvent}}" class="live-card">
+    <image
+      class="live-card__background"
+      src="/assets/images/live-pre-backgroud.png"
+      mode="scaleToFill"
+      aria-hidden="true"
+    />
     <view class="live-copy">
       <text class="live-title">{{liveEvent.title}}</text>
       <text class="live-description">{{liveEvent.description}}</text>
@@ -136,4 +199,6 @@
       </view>
     </view>
   </view>
+    </view>
+  </scroll-view>
 </view>
