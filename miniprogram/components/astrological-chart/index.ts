@@ -785,6 +785,37 @@ Component({
       }, 80)
     },
 
+    exportChartImage(): Promise<string> {
+      const runtime = runtimeByInstance.get(this)
+      if (!runtime || this.data.chartLoadState !== 'ready') {
+        return Promise.reject(new Error('星盘尚未生成完成'))
+      }
+
+      if (runtime.drawTimer !== null) {
+        clearTimeout(runtime.drawTimer)
+        runtime.drawTimer = null
+      }
+      if (runtime.drawFrameId !== null) {
+        runtime.canvas.cancelAnimationFrame(runtime.drawFrameId)
+        runtime.drawFrameId = null
+      }
+      this.drawChart()
+
+      return new Promise((resolve, reject) => {
+        runtime.canvas.requestAnimationFrame(() => {
+          wx.canvasToTempFilePath({
+            canvas: runtime.canvas,
+            destWidth: runtime.canvas.width,
+            destHeight: runtime.canvas.height,
+            fileType: 'png',
+            quality: 1,
+            success: ({ tempFilePath }) => resolve(tempFilePath),
+            fail: reject,
+          }, this)
+        })
+      })
+    },
+
     drawRingBackground(
       context: WechatMiniprogram.CanvasRenderingContext.CanvasRenderingContext2D,
       center: Point,

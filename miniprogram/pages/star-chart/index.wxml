@@ -21,13 +21,19 @@
     <view class="page-heading">
       <text class="page-title">{{archiveName}}</text>
       <view class="heading-actions">
-        <view class="icon-button" hover-class="icon-button--pressed" role="button" aria-label="切换用户">
+        <navigator
+          class="icon-button"
+          url="/pages/archives/switch"
+          hover-class="icon-button--pressed"
+          aria-label="切换用户"
+        >
           <image class="heading-icon" src="/assets/icons/switch.png" mode="aspectFit" />
-        </view>
+        </navigator>
         <button
           class="icon-button"
           hover-class="icon-button--pressed"
-          open-type="share"
+          bindtap="shareChartImage"
+          disabled="{{isSharingChart}}"
           aria-label="分享星盘"
         >
           <image class="heading-icon" src="/assets/icons/share.png" mode="aspectFit" />
@@ -38,7 +44,7 @@
 
   <view class="star-chart-content">
     <view class="chart-shell">
-      <astrological-chart />
+      <astrological-chart id="astrological-chart" />
     </view>
 
     <view class="notice-banner">

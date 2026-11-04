@@ -73,13 +73,18 @@ page {
   align-items: center;
   justify-content: center;
   width: 48rpx;
-  height: 48rpx;
   min-width: 48rpx;
+  max-width: 48rpx;
+  height: 48rpx;
+  min-height: 48rpx;
+  max-height: 48rpx;
   margin: 0;
   padding: 0;
+  flex: none;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.54);
+  box-sizing: border-box;
+  background: transparent;
   line-height: 48rpx;
 }
 
@@ -95,6 +100,7 @@ page {
 .heading-icon {
   width: 40rpx;
   height: 40rpx;
+  flex: none;
 }
 
 .chart-shell {

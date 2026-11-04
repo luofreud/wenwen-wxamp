@@ -19,6 +19,10 @@ interface AnalysisRuntime {
   unsubscribe: (() => void) | null
 }
 
+interface AstrologicalChartComponent {
+  exportChartImage(): Promise<string>
+}
+
 const NATAL_ANALYSIS_PATH = '/house9calculate' as const
 const analysisRuntimeByPage = new WeakMap<object, AnalysisRuntime>()
 
@@ -113,6 +117,7 @@ Page({
     statusBarHeight: 0,
     titleBarRight: 0,
     pageHeight: 0,
+    isSharingChart: false,
     archiveName: '星盘详情',
     interpretations: [] as InterpretationItem[],
   },
@@ -255,6 +260,37 @@ Page({
       })
     } catch (error) {
       console.warn('获取导航栏尺寸失败', error)
+    }
+  },
+
+  async shareChartImage(): Promise<void> {
+    if (this.data.isSharingChart) return
+
+    const chart = this.selectComponent('#astrological-chart') as unknown as AstrologicalChartComponent | null
+    if (!chart || typeof chart.exportChartImage !== 'function') {
+      wx.showToast({ title: '星盘暂时无法分享，请稍后重试', icon: 'none' })
+      return
+    }
+
+    this.setData({ isSharingChart: true })
+    wx.showLoading({ title: '正在生成图片', mask: true })
+
+    try {
+      const path = await chart.exportChartImage()
+      wx.hideLoading()
+      await wx.showShareImageMenu({
+        path,
+        needShowEntrance: false,
+      })
+    } catch (error) {
+      wx.hideLoading()
+      const record = asRecord(error)
+      const message = text(record.errMsg ?? record.message)
+      if (!message.includes('cancel')) {
+        wx.showToast({ title: '星盘图片生成失败，请稍后重试', icon: 'none' })
+      }
+    } finally {
+      this.setData({ isSharingChart: false })
     }
   },
 
