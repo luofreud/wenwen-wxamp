@@ -14,6 +14,7 @@
     "navigationStyle": "custom"
   },
   "tabBar": {
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/index/index",

@@ -36,6 +36,13 @@ interface NextMilestoneView extends RewardMilestone {
   remainingDays: number
 }
 
+interface ProfileZodiac {
+  color: string
+  end: number
+  icon: string
+  name: string
+}
+
 interface CycleDayTapEvent {
   currentTarget: {
     dataset: {
@@ -48,34 +55,34 @@ const hasText = (value: string | null): boolean => {
   return Boolean(value?.trim())
 }
 
-const getZodiacName = (birthDate: string | null): string => {
-  if (!birthDate) return ''
+const PROFILE_ZODIACS: ProfileZodiac[] = [
+  { end: 120, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', color: '#75624B' },
+  { end: 219, name: '水瓶座', icon: '/assets/constellation/aquarius.svg', color: '#2787B7' },
+  { end: 320, name: '双鱼座', icon: '/assets/constellation/pisces.svg', color: '#5B68C8' },
+  { end: 420, name: '白羊座', icon: '/assets/constellation/aries.svg', color: '#E35D5B' },
+  { end: 521, name: '金牛座', icon: '/assets/constellation/taurus.svg', color: '#B4872C' },
+  { end: 622, name: '双子座', icon: '/assets/constellation/gemini.svg', color: '#35A169' },
+  { end: 723, name: '巨蟹座', icon: '/assets/constellation/cancer.svg', color: '#3778D4' },
+  { end: 823, name: '狮子座', icon: '/assets/constellation/leo.svg', color: '#E47631' },
+  { end: 923, name: '处女座', icon: '/assets/constellation/virgo.svg', color: '#78983B' },
+  { end: 1024, name: '天秤座', icon: '/assets/constellation/libra.svg', color: '#8B65CF' },
+  { end: 1123, name: '天蝎座', icon: '/assets/constellation/scorpio.svg', color: '#774AA5' },
+  { end: 1222, name: '射手座', icon: '/assets/constellation/sagittarius.svg', color: '#D65B7A' },
+  { end: 1231, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', color: '#75624B' },
+]
+
+const getProfileZodiac = (birthDate: string | null): ProfileZodiac | null => {
+  if (!birthDate) return null
 
   const month = Number(birthDate.slice(5, 7))
   const day = Number(birthDate.slice(8, 10))
   const monthDay = month * 100 + day
 
   if (!Number.isFinite(monthDay) || monthDay < 101 || monthDay > 1231) {
-    return ''
+    return null
   }
 
-  const signs = [
-    { end: 120, name: '摩羯座' },
-    { end: 219, name: '水瓶座' },
-    { end: 320, name: '双鱼座' },
-    { end: 420, name: '白羊座' },
-    { end: 521, name: '金牛座' },
-    { end: 622, name: '双子座' },
-    { end: 723, name: '巨蟹座' },
-    { end: 823, name: '狮子座' },
-    { end: 923, name: '处女座' },
-    { end: 1024, name: '天秤座' },
-    { end: 1123, name: '天蝎座' },
-    { end: 1222, name: '射手座' },
-    { end: 1231, name: '摩羯座' },
-  ]
-
-  return signs.find(({ end }) => monthDay <= end)?.name ?? ''
+  return PROFILE_ZODIACS.find(({ end }) => monthDay <= end) ?? null
 }
 
 const isSuccessCode = (code: number): boolean => {
@@ -168,10 +175,11 @@ Page({
     isProfileEmpty: false,
     needsWechatInfo: false,
     profileZodiac: '',
+    profileZodiacColor: '',
+    profileZodiacIcon: '',
     checkInStatus: null as CheckInStatus | null,
     checkInDays: [] as CheckInDayView[],
     nextMilestone: null as NextMilestoneView | null,
-    hasRewardMilestones: false,
     isCheckInLoading: true,
     isCheckingIn: false,
     checkInError: '',
@@ -221,12 +229,15 @@ Page({
     const hasAvatar = hasText(profile.avatar)
     const hasNickname = hasText(profile.nickname)
     const hasBirthDate = hasText(profile.birth_date)
+    const zodiac = getProfileZodiac(profile.birth_date)
 
     this.setData({
       profile,
       isProfileEmpty: !hasAvatar && !hasNickname && !hasBirthDate,
       needsWechatInfo: !hasAvatar || !hasNickname,
-      profileZodiac: getZodiacName(profile.birth_date),
+      profileZodiac: zodiac?.name ?? '',
+      profileZodiacColor: zodiac?.color ?? '',
+      profileZodiacIcon: zodiac?.icon ?? '',
     })
   },
 
@@ -324,7 +335,6 @@ Page({
         checkInStatus: response.data,
         checkInDays: toCheckInDays(response.data),
         nextMilestone: getNextMilestone(response.data),
-        hasRewardMilestones: response.data.reward_milestones.length > 0,
       })
       return response.data
     } catch (error) {

@@ -27,7 +27,7 @@
     <view class="profile-error-icon">!</view>
     <view class="profile-copy">
       <text class="profile-name profile-name--error">资料暂时没有加载出来</text>
-      <text class="profile-tip">{{profileError}}</text>
+      <text class="profile-message">{{profileError}}</text>
     </view>
     <button class="profile-retry" bindtap="retryProfile">重试</button>
   </view>
@@ -51,7 +51,7 @@
     </view>
     <view class="profile-copy">
       <text class="profile-name">同步微信资料</text>
-      <text class="profile-tip">授权头像和昵称，完善你的星友身份</text>
+      <text class="profile-message">授权头像和昵称，完善你的星友身份</text>
     </view>
   </button>
 
@@ -66,7 +66,20 @@
     </view>
     <view class="profile-copy">
       <text class="profile-name">{{profile.nickname || '星友'}}</text>
-      <text class="profile-tip">{{profileZodiac ? '星座 · ' + profileZodiac : '欢迎来到问问星座'}}</text>
+      <view
+        wx:if="{{profileZodiac}}"
+        class="profile-tip"
+        style="color: {{profileZodiacColor}};"
+      >
+        <image
+          class="profile-zodiac-icon"
+          src="{{profileZodiacIcon}}"
+          mode="aspectFit"
+          aria-label="{{profileZodiac}}图标"
+        />
+        <text class="profile-zodiac-name">{{profileZodiac}}</text>
+      </view>
+      <text wx:else class="profile-message">欢迎来到问问星座</text>
     </view>
     <button
       wx:if="{{needsWechatInfo}}"
@@ -78,26 +91,33 @@
     >同步资料</button>
   </view>
 
+  <view class="mine-content-panel">
   <view class="checkin-card">
+    <image
+      class="checkin-card__background"
+      src="/assets/images/check-background.png"
+      mode="widthFix"
+      aria-hidden="true"
+    />
+    <view class="checkin-card__content">
     <view class="checkin-head">
-      <view class="checkin-heading">
-        <view class="reward-icon" aria-hidden="true">
-          <view class="reward-icon__spark">✦</view>
-        </view>
-        <view class="checkin-copy">
-          <text class="checkin-title">签到领奖励</text>
-          <text wx:if="{{checkInStatus}}" class="checkin-subtitle">连续签到 {{checkInStatus.consecutive_days}} 天 · 累计 {{checkInStatus.total_days}} 天</text>
-          <text wx:else class="checkin-subtitle">每天签到，积攒属于你的星光</text>
-        </view>
-      </view>
-      <view wx:if="{{checkInStatus}}" class="balance-chip">
-        <text class="balance-chip__star">★</text>
-        <text>{{checkInStatus.star_coin_balance}}</text>
-      </view>
+      <image
+        class="checkin-title-image"
+        src="/assets/images/check-title.png"
+        mode="scaleToFill"
+        aria-label="签到领奖励，连续签到7日可以获得额外奖励"
+      />
+      <button
+        class="checkin-button {{checkInStatus && checkInStatus.has_checked_in ? 'checkin-button--done' : ''}}"
+        hover-class="checkin-button--pressed"
+        loading="{{isCheckingIn}}"
+        disabled="{{isCheckInLoading || !checkInStatus || isCheckingIn || checkInStatus.has_checked_in}}"
+        bindtap="submitCheckIn"
+      >{{isCheckingIn ? '签到中' : (checkInStatus && checkInStatus.has_checked_in ? '已签到' : '立即签到')}}</button>
     </view>
 
     <view wx:if="{{isCheckInLoading}}" class="checkin-loading">
-      <view wx:for="{{[1, 2, 3, 4]}}" wx:key="*this" class="checkin-loading__day"></view>
+      <view wx:for="{{[1, 2, 3, 4, 5, 6, 7, 8]}}" wx:key="*this" class="checkin-loading__day"></view>
     </view>
 
     <view wx:elif="{{checkInError}}" class="checkin-error">
@@ -106,70 +126,75 @@
     </view>
 
     <block wx:elif="{{checkInStatus}}">
-      <view class="checkin-progress">
-        <text>第 {{checkInStatus.reward_round}} 轮</text>
-        <text wx:if="{{nextMilestone}}">下个目标 · 连续 {{nextMilestone.target_day}} 天</text>
-        <text wx:elif="{{hasRewardMilestones}}">本轮里程碑已达成</text>
-        <text wx:else>长期进度 {{checkInStatus.reward_progress_day}}/{{checkInStatus.reward_round_length}}</text>
-      </view>
-
-      <view wx:if="{{nextMilestone}}" class="milestone-card">
-        <view class="milestone-copy">
-          <text class="milestone-title">再签到 {{nextMilestone.remainingDays}} 天解锁</text>
-          <text class="milestone-reward">额外 +{{nextMilestone.reward_star_coins}} 星币</text>
-        </view>
-        <view class="milestone-track">
-          <view class="milestone-fill" style="width: {{nextMilestone.progressPercent}}%;"></view>
-        </view>
-      </view>
-
       <view class="checkin-grid">
         <view
           wx:for="{{checkInDays}}"
           wx:key="cycle_day"
-          class="day-card {{item.isCurrent ? 'day-card--today' : ''}} {{item.isChecked ? 'day-card--checked' : ''}} {{item.isSeventh ? 'day-card--bonus' : ''}}"
+          class="day-card {{item.isCurrent ? 'day-card--today' : ''}} {{item.isChecked ? 'day-card--checked' : ''}} {{item.isSeventh && !item.isChecked ? 'day-card--bonus' : ''}}"
           data-can-check-in="{{item.isCurrent && !checkInStatus.has_checked_in}}"
           bindtap="handleCycleDayTap"
           role="button"
-          aria-label="{{item.label}}，奖励{{item.reward_star_coins}}星币"
+          aria-label="{{item.isChecked ? '第' + item.cycle_day + '天，已完成签到' : item.label + '，奖励' + item.reward_star_coins + '星币'}}"
         >
-          <block wx:if="{{!item.isSeventh}}">
+          <block wx:if="{{item.isChecked}}">
+            <text class="day-label">第{{item.cycle_day}}天</text>
+            <image
+              class="day-checked-icon"
+              src="/assets/images/check-done.png"
+              mode="aspectFit"
+              aria-hidden="true"
+            />
+          </block>
+          <block wx:elif="{{!item.isSeventh}}">
             <text class="day-label">{{item.label}}</text>
-            <view class="coin" aria-hidden="true"><text>★</text></view>
-            <text class="reward-number">+{{item.reward_star_coins}}</text>
+            <view class="coin-reward">
+              <image
+                class="coin"
+                src="/assets/icons/start-coin.png"
+                mode="aspectFit"
+                aria-hidden="true"
+              />
+              <text class="reward-number">+{{item.reward_star_coins}}</text>
+            </view>
           </block>
           <block wx:else>
             <view class="bonus-coin">
               <text class="day-label">{{item.label}}</text>
-              <view class="coin coin--large" aria-hidden="true"><text>★</text></view>
-              <text class="reward-number">+{{item.reward_star_coins}}</text>
+              <view class="coin-reward">
+                <image
+                  class="coin"
+                  src="/assets/icons/start-coin.png"
+                  mode="aspectFit"
+                  aria-hidden="true"
+                />
+                <text class="reward-number">+{{item.reward_star_coins}}</text>
+              </view>
             </view>
             <view class="bonus-coupon">
-              <view class="gift" aria-hidden="true">
-                <view class="gift__bow"></view>
-                <view class="gift__box"></view>
-              </view>
+              <image
+                class="gift"
+                src="/assets/icons/gift.png"
+                mode="aspectFit"
+                aria-hidden="true"
+              />
               <text class="coupon-text">额外奖励</text>
               <text class="coupon-extra">+{{item.bonusRewardStarCoins}} 星币</text>
             </view>
           </block>
         </view>
       </view>
-
-      <button
-        class="checkin-button checkin-button--wide {{checkInStatus.has_checked_in ? 'checkin-button--done' : ''}}"
-        hover-class="checkin-button--pressed"
-        loading="{{isCheckingIn}}"
-        disabled="{{isCheckingIn || checkInStatus.has_checked_in}}"
-        bindtap="submitCheckIn"
-      >{{isCheckingIn ? '签到中' : (checkInStatus.has_checked_in ? '今日已签到' : '立即签到 · +' + checkInStatus.today_reward_star_coins + ' 星币')}}</button>
     </block>
+    </view>
   </view>
 
-  <view class="notice-banner">
-    <view class="notice-icon" aria-hidden="true">!</view>
-    <text class="notice-text">连续签到达成里程碑，还可获得额外星币奖励</text>
-    <view class="notice-arrow" aria-hidden="true"></view>
+  <view wx:if="{{nextMilestone}}" class="milestone-card">
+    <view class="milestone-copy">
+      <text class="milestone-title">再签到 {{nextMilestone.remainingDays}} 天解锁</text>
+      <text class="milestone-reward">额外 +{{nextMilestone.reward_star_coins}} 星币</text>
+    </view>
+    <view class="milestone-track">
+      <view class="milestone-fill" style="width: {{nextMilestone.progressPercent}}%;"></view>
+    </view>
   </view>
 
   <view class="feature-grid">
@@ -201,5 +226,6 @@
       </view>
       <view class="feature-arrow" aria-hidden="true"></view>
     </view>
+  </view>
   </view>
 </view>
