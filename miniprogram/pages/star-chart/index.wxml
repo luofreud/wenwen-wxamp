@@ -72,10 +72,7 @@
           <text class="card-title">{{item.title}}</text>
         </view>
         <text class="card-subtitle">{{item.subtitle}}</text>
-        <text class="card-summary">
-          {{item.summary}}
-          <text class="read-more">全文</text>
-        </text>
+        <text class="card-summary">{{item.summary}}</text>
       </view>
     </view>
 

@@ -88,14 +88,16 @@
       <text class="corner-control__label">换肤</text>
     </button>
 
-    <view
-      wx:if="{{detail.visible}}"
-      class="detail-layer"
-      bindtap="closeDetail"
-      catchtouchmove="stopPropagation"
-    >
-      <template is="detail-dialog" data="{{detail: detail}}" />
-    </view>
+    <root-portal enable="{{detail.visible}}">
+      <view
+        wx:if="{{detail.visible}}"
+        class="detail-layer"
+        bindtap="closeDetail"
+        catchtouchmove="stopPropagation"
+      >
+        <template is="detail-dialog" data="{{detail: detail}}" />
+      </view>
+    </root-portal>
 
     <root-portal enable="{{styleSheetVisible}}">
       <view
