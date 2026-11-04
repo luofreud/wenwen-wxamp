@@ -107,7 +107,13 @@
         mode="scaleToFill"
         aria-label="签到领奖励，连续签到7日可以获得额外奖励"
       />
+      <view
+        wx:if="{{isCheckInLoading}}"
+        class="checkin-button checkin-button--skeleton"
+        aria-hidden="true"
+      ></view>
       <button
+        wx:else
         class="checkin-button {{checkInStatus && checkInStatus.has_checked_in ? 'checkin-button--done' : ''}}"
         hover-class="checkin-button--pressed"
         loading="{{isCheckingIn}}"
@@ -187,7 +193,15 @@
     </view>
   </view>
 
-  <view wx:if="{{nextMilestone}}" class="milestone-card">
+  <view wx:if="{{isCheckInLoading}}" class="milestone-card milestone-card--skeleton" aria-hidden="true">
+    <view class="milestone-skeleton-copy">
+      <view class="milestone-skeleton-text milestone-skeleton-text--title"></view>
+      <view class="milestone-skeleton-text milestone-skeleton-text--reward"></view>
+    </view>
+    <view class="milestone-skeleton-track"></view>
+  </view>
+
+  <view wx:elif="{{nextMilestone}}" class="milestone-card">
     <view class="milestone-copy">
       <text class="milestone-title">再签到 {{nextMilestone.remainingDays}} 天解锁</text>
       <text class="milestone-reward">额外 +{{nextMilestone.reward_star_coins}} 星币</text>
@@ -213,7 +227,11 @@
       <view class="feature-arrow" aria-hidden="true"></view>
     </navigator>
 
-    <view class="feature-card feature-card--report" hover-class="feature-card--pressed">
+    <navigator
+      class="feature-card feature-card--report"
+      url="/pages/reports/list"
+      hover-class="feature-card--pressed"
+    >
       <view class="feature-icon feature-icon--report" aria-hidden="true">
         <view class="report-shape">
           <view class="report-line report-line--long"></view>
@@ -225,7 +243,7 @@
         <text class="feature-subtitle">查看星座解读</text>
       </view>
       <view class="feature-arrow" aria-hidden="true"></view>
-    </view>
+    </navigator>
   </view>
   </view>
 </view>

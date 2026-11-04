@@ -7,7 +7,8 @@
     "pages/live-preview/index",
     "pages/archives/index",
     "pages/archives/edit",
-    "pages/archives/switch"
+    "pages/archives/switch",
+    "pages/reports/list"
   ],
   "window": {
     "navigationBarTextStyle": "black",
