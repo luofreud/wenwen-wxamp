@@ -124,6 +124,8 @@ interface CanvasRuntime {
   height: number
   pixelRatio: number
   detailTargets: DetailTarget[]
+  drawTimer: ReturnType<typeof setTimeout> | null
+  drawFrameId: number | null
 }
 
 interface DetailTarget {
@@ -504,6 +506,15 @@ Component({
       this.bindArchiveStore()
     },
     detached() {
+      const canvasRuntime = runtimeByInstance.get(this)
+      if (canvasRuntime) {
+        if (canvasRuntime.drawTimer !== null) {
+          clearTimeout(canvasRuntime.drawTimer)
+        }
+        if (canvasRuntime.drawFrameId !== null) {
+          canvasRuntime.canvas.cancelAnimationFrame(canvasRuntime.drawFrameId)
+        }
+      }
       const requestRuntime = requestRuntimeByInstance.get(this)
       requestRuntime?.unsubscribe?.()
       if (requestRuntime) {
@@ -693,6 +704,8 @@ Component({
             height,
             pixelRatio,
             detailTargets: [],
+            drawTimer: null,
+            drawFrameId: null,
           })
           this.setData({ chartReady: true })
           this.drawChart()
@@ -745,6 +758,31 @@ Component({
       this.drawAspects(context, center, themeName === 'classic' ? fourthInner * 0.75 : fourthInner, ascDegree, themeName, payload.planet, uiScale)
       this.drawHouseNumbers(context, center, (fourthOuter + fourthInner) / 2, ascDegree, themeName, theme, payload.house, uiScale)
       this.drawPlanets(context, center, themeName === 'classic' ? fourthInner : (secondInner + thirdInner) / 2, ascDegree, themeName, theme, style, payload.planet, uiScale)
+    },
+
+    scheduleChartDraw() {
+      const runtime = runtimeByInstance.get(this)
+      if (!runtime) return
+
+      if (runtime.drawTimer !== null) {
+        clearTimeout(runtime.drawTimer)
+      }
+      if (runtime.drawFrameId !== null) {
+        runtime.canvas.cancelAnimationFrame(runtime.drawFrameId)
+        runtime.drawFrameId = null
+      }
+
+      runtime.drawTimer = setTimeout(() => {
+        const currentRuntime = runtimeByInstance.get(this)
+        if (!currentRuntime) return
+        currentRuntime.drawTimer = null
+        currentRuntime.drawFrameId = currentRuntime.canvas.requestAnimationFrame(() => {
+          const latestRuntime = runtimeByInstance.get(this)
+          if (!latestRuntime) return
+          latestRuntime.drawFrameId = null
+          this.drawChart()
+        })
+      }, 80)
     },
 
     drawRingBackground(
@@ -1274,7 +1312,7 @@ Component({
     selectTheme(event: WechatMiniprogram.TouchEvent) {
       const theme = event.currentTarget.dataset.theme as ThemeName
       if (!THEMES[theme] || theme === this.data.theme) return
-      this.setData({ theme }, () => this.drawChart())
+      this.setData({ theme }, () => this.scheduleChartDraw())
       this.triggerEvent('themechange', {
         theme,
         zodiacStyle: this.data.zodiacStyle,
@@ -1284,7 +1322,7 @@ Component({
     selectZodiacStyle(event: WechatMiniprogram.TouchEvent) {
       const zodiacStyle = event.currentTarget.dataset.style as ZodiacStyle
       if (!['text', 'symbol'].includes(zodiacStyle) || zodiacStyle === this.data.zodiacStyle) return
-      this.setData({ zodiacStyle }, () => this.drawChart())
+      this.setData({ zodiacStyle }, () => this.scheduleChartDraw())
       this.triggerEvent('themechange', {
         theme: this.data.theme,
         zodiacStyle,
