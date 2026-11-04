@@ -144,12 +144,12 @@
 }
 
 .style-sheet-layer {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 4;
+  z-index: 999;
   display: flex;
   align-items: flex-end;
   background: rgba(0, 0, 0, 0.2);
@@ -157,7 +157,7 @@
 
 .style-sheet {
   width: 100%;
-  padding: 16rpx 32rpx 32rpx;
+  padding: 16rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
   border-radius: 40rpx 40rpx 0 0;
   background: #fff;
   box-shadow: 0 -12rpx 36rpx rgba(38, 29, 50, 0.12);

@@ -97,48 +97,50 @@
       <template is="detail-dialog" data="{{detail: detail}}" />
     </view>
 
-    <view
-      wx:if="{{styleSheetVisible}}"
-      class="style-sheet-layer"
-      bindtap="closeStyleSheet"
-      catchtouchmove="stopPropagation"
-    >
-      <view class="style-sheet" catchtap="stopPropagation">
-        <view class="style-sheet__handle"></view>
-        <view class="style-section">
-          <text class="section-title">皮肤</text>
-          <view class="theme-options">
-            <button
-              wx:for="{{themeOptions}}"
-              wx:key="value"
-              class="theme-option {{theme === item.value ? 'theme-option--active' : ''}}"
-              data-theme="{{item.value}}"
-              bindtap="selectTheme"
-              aria-label="切换为{{item.label}}皮肤"
-            >
-              <view class="theme-swatch theme-swatch--{{item.value}}">
-                <view class="theme-swatch__inner"></view>
-                <view wx:if="{{theme === item.value}}" class="theme-swatch__check">✓</view>
-              </view>
-              <text class="theme-option__label">{{item.label}}</text>
-            </button>
+    <root-portal enable="{{styleSheetVisible}}">
+      <view
+        wx:if="{{styleSheetVisible}}"
+        class="style-sheet-layer"
+        bindtap="closeStyleSheet"
+        catchtouchmove="stopPropagation"
+      >
+        <view class="style-sheet" catchtap="stopPropagation">
+          <view class="style-sheet__handle"></view>
+          <view class="style-section">
+            <text class="section-title">皮肤</text>
+            <view class="theme-options">
+              <button
+                wx:for="{{themeOptions}}"
+                wx:key="value"
+                class="theme-option {{theme === item.value ? 'theme-option--active' : ''}}"
+                data-theme="{{item.value}}"
+                bindtap="selectTheme"
+                aria-label="切换为{{item.label}}皮肤"
+              >
+                <view class="theme-swatch theme-swatch--{{item.value}}">
+                  <view class="theme-swatch__inner"></view>
+                  <view wx:if="{{theme === item.value}}" class="theme-swatch__check">✓</view>
+                </view>
+                <text class="theme-option__label">{{item.label}}</text>
+              </button>
+            </view>
           </view>
-        </view>
 
-        <view class="style-section style-section--display">
-          <text class="section-title">样式</text>
-          <view class="display-options">
-            <button
-              wx:for="{{displayOptions}}"
-              wx:key="value"
-              class="display-option {{zodiacStyle === item.value ? 'display-option--active' : ''}}"
-              data-style="{{item.value}}"
-              bindtap="selectZodiacStyle"
-              aria-label="切换为{{item.label}}样式"
-            >{{item.label}}</button>
+          <view class="style-section style-section--display">
+            <text class="section-title">样式</text>
+            <view class="display-options">
+              <button
+                wx:for="{{displayOptions}}"
+                wx:key="value"
+                class="display-option {{zodiacStyle === item.value ? 'display-option--active' : ''}}"
+                data-style="{{item.value}}"
+                bindtap="selectZodiacStyle"
+                aria-label="切换为{{item.label}}样式"
+              >{{item.label}}</button>
+            </view>
           </view>
         </view>
       </view>
-    </view>
+    </root-portal>
   </view>
 </view>

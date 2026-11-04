@@ -232,7 +232,7 @@ const THEMES: Record<ThemeName, ChartTheme> = {
 
 const ZODIAC_SYMBOLS = ['♈︎', '♉︎', '♊︎', '♋︎', '♌︎', '♍︎', '♎︎', '♏︎', '♐︎', '♑︎', '♒︎', '♓︎']
 const ZODIAC_FONT_CHARS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-const ZODIAC_NAMES = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼']
+const ZODIAC_SHORT_NAMES = ['羊', '牛', '双', '蟹', '狮', '处', '秤', '蝎', '射', '羯', '瓶', '鱼']
 const ZODIAC_COLORS = [
   '#e35d5b', '#f2c94c', '#36a66a', '#327cf2',
   '#e35d5b', '#f2c94c', '#36a66a', '#327cf2',
@@ -887,13 +887,13 @@ Component({
         context.stroke()
 
         const point = pointOnCircle(center, contentRadius, signId * 30 + 15, ascDegree)
-        const label = style === 'symbol' ? ZODIAC_SYMBOLS[signId] : ZODIAC_NAMES[signId]
+        const label = style === 'symbol' ? ZODIAC_SYMBOLS[signId] : ZODIAC_SHORT_NAMES[signId]
         const color = themeName === 'stardust' ? '#383838' : ZODIAC_COLORS[signId]
         const drewGlyph = style === 'symbol'
           && drawVectorGlyph(context, ixingpanGlyphs, ZODIAC_FONT_CHARS[signId], point.x, point.y, 17 * uiScale * SYMBOL_SIZE_FACTOR, color)
         if (!drewGlyph) {
           context.fillStyle = color
-          context.font = `${(style === 'symbol' ? 17 * SYMBOL_SIZE_FACTOR : 10) * uiScale}px sans-serif`
+          context.font = `${(style === 'symbol' ? 17 * SYMBOL_SIZE_FACTOR : 13) * uiScale}px sans-serif`
           context.fillText(label, point.x, point.y)
         }
         runtimeByInstance.get(this)?.detailTargets.push({
