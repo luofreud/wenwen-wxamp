@@ -48,5 +48,8 @@
   },
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
+  "useExtendedLib": {
+    "weui": "latest"
+  },
   "lazyCodeLoading": "requiredComponents"
 }

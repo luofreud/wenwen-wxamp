@@ -5,21 +5,16 @@ import { archiveStore } from '../../stores/index'
 interface ArchiveListItem extends Archive {
   birthTimeText: string
   genderLabel: string
-  scrollLeft: number
+  slideButtons: ArchiveSlideButton[]
   zodiacName: string
   zodiacSymbol: string
   zodiacTone: 'blue' | 'orange'
 }
 
-interface ArchiveScrollEvent {
-  currentTarget: {
-    dataset: {
-      id?: string | number
-    }
-  }
-  detail: {
-    scrollLeft: number
-  }
+interface ArchiveSlideButton {
+  data: number
+  text: string
+  type: 'warn'
 }
 
 interface ArchiveActionEvent {
@@ -27,6 +22,12 @@ interface ArchiveActionEvent {
     dataset: {
       id?: string | number
     }
+  }
+}
+
+interface ArchiveSlideButtonEvent {
+  detail: {
+    data?: string | number
   }
 }
 
@@ -79,7 +80,7 @@ const toListItem = (archive: Archive): ArchiveListItem => {
     ...archive,
     birthTimeText: formatBirthTime(archive.birth_time),
     genderLabel: getGenderLabel(archive.gender),
-    scrollLeft: 0,
+    slideButtons: [{ data: archive.id, text: '删除', type: 'warn' }],
     zodiacName: zodiac.name,
     zodiacSymbol: zodiac.symbol,
     zodiacTone: zodiac.tone,
@@ -91,9 +92,7 @@ Page({
     navigationReady: false,
     navigationBarHeight: 0,
     statusBarHeight: 0,
-    navigationRightPadding: 0,
     showHint: true,
-    deleteRevealWidth: 0,
     isLoading: true,
     loadError: '',
     deletingArchiveId: null as number | null,
@@ -136,8 +135,6 @@ Page({
         navigationReady: true,
         navigationBarHeight: Math.ceil(navigationBarHeight),
         statusBarHeight: Math.ceil(statusBarHeight),
-        navigationRightPadding: Math.ceil(windowInfo.windowWidth - menuButton.left + 8),
-        deleteRevealWidth: windowInfo.windowWidth * 120 / 750,
       })
     } catch (error) {
       console.warn('获取导航栏尺寸失败', error)
@@ -189,38 +186,8 @@ Page({
     })
   },
 
-  handleArchiveScroll(event: ArchiveScrollEvent) {
-    const archiveId = Number(event.currentTarget.dataset.id)
-    if (!Number.isFinite(archiveId)) return
-
-    this.setData({
-      archives: this.data.archives.map((archive) => archive.id === archiveId
-        ? { ...archive, scrollLeft: event.detail.scrollLeft }
-        : archive),
-    })
-  },
-
-  settleArchiveSwipe(event: ArchiveActionEvent) {
-    const archiveId = Number(event.currentTarget.dataset.id)
-    if (!Number.isFinite(archiveId)) return
-
-    const archives = this.data.archives.map((archive) => {
-      if (archive.id !== archiveId) {
-        return { ...archive, scrollLeft: 0 }
-      }
-
-      return {
-        ...archive,
-        scrollLeft: archive.scrollLeft >= this.data.deleteRevealWidth / 2
-          ? this.data.deleteRevealWidth
-          : 0,
-      }
-    })
-    this.setData({ archives })
-  },
-
-  requestDeleteArchive(event: ArchiveActionEvent) {
-    const archiveId = Number(event.currentTarget.dataset.id)
+  requestDeleteArchive(event: ArchiveSlideButtonEvent) {
+    const archiveId = Number(event.detail.data)
     const archive = this.data.archives.find(({ id }) => id === archiveId)
     if (!archive || this.data.deletingArchiveId !== null) return
 

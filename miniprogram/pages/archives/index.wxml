@@ -4,26 +4,30 @@
     class="custom-navigation"
     style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
   >
-    <view
-      class="navigation-content"
-      style="padding-right: {{navigationRightPadding}}px;"
+    <image
+      class="navigation-brand"
+      src="/assets/images/title-bar.png"
+      mode="aspectFit"
+      aria-label="问问星座"
+    />
+  </view>
+
+  <view class="archive-toolbar">
+    <navigator
+      class="back-action"
+      open-type="navigateBack"
+      delta="1"
+      hover-class="navigation-action--pressed"
+      aria-label="返回"
     >
-      <navigator
-        class="back-action"
-        open-type="navigateBack"
-        delta="1"
-        hover-class="navigation-action--pressed"
-        aria-label="返回"
-      >
-        <view class="back-icon"></view>
-      </navigator>
-      <text class="navigation-title">我的档案</text>
-      <navigator
-        class="add-action"
-        url="/pages/archives/edit"
-        hover-class="navigation-action--pressed"
-      >添加档案</navigator>
-    </view>
+      <view class="back-icon"></view>
+    </navigator>
+    <text class="navigation-title">我的档案</text>
+    <navigator
+      class="add-action"
+      url="/pages/archives/edit"
+      hover-class="navigation-action--pressed"
+    >添加档案</navigator>
   </view>
 
   <view wx:if="{{showHint && archives.length > 0}}" class="swipe-hint">
@@ -61,62 +65,47 @@
   </view>
 
   <view wx:else class="archive-list">
-    <scroll-view
+    <mp-slideview
       wx:for="{{archives}}"
       wx:key="id"
-      class="swipe-archive"
-      scroll-x="{{true}}"
-      enhanced="{{true}}"
-      show-scrollbar="{{false}}"
-      scroll-with-animation="{{true}}"
-      scroll-left="{{item.scrollLeft}}"
-      data-id="{{item.id}}"
-      bindscroll="handleArchiveScroll"
-      bindtouchend="settleArchiveSwipe"
+      class="archive-slideview"
+      buttons="{{item.slideButtons}}"
+      disable="{{deletingArchiveId !== null}}"
+      duration="{{260}}"
+      rebounce="{{6}}"
+      bindbuttontap="requestDeleteArchive"
     >
-      <view class="swipe-track">
+      <view
+        class="archive-card archive-card--slide"
+        data-id="{{item.id}}"
+        bindtap="editArchive"
+        hover-class="archive-card--pressed"
+        role="button"
+        aria-label="编辑{{item.name}}档案"
+      >
+        <view class="archive-copy">
+          <view class="archive-heading">
+            <text class="archive-name">{{item.name}}</text>
+            <text class="archive-relation">{{item.genderLabel}}</text>
+            <view class="zodiac-tag zodiac-tag--{{item.zodiacTone}}">
+              <text class="zodiac-symbol">{{item.zodiacSymbol}}</text>
+              <text>{{item.zodiacName}}</text>
+            </view>
+          </view>
+          <text class="archive-date">{{item.birthTimeText}}</text>
+          <text class="archive-place">{{item.birthPlace}} · UTC{{item.timezone >= 0 ? '+' : ''}}{{item.timezone}}</text>
+        </view>
         <view
-          class="archive-card archive-card--swipe"
+          class="edit-action"
           data-id="{{item.id}}"
-          bindtap="editArchive"
-          hover-class="archive-card--pressed"
+          catchtap="editArchive"
+          hover-class="edit-action--pressed"
           role="button"
           aria-label="编辑{{item.name}}档案"
         >
-          <view class="archive-copy">
-            <view class="archive-heading">
-              <text class="archive-name">{{item.name}}</text>
-              <text class="archive-relation">{{item.genderLabel}}</text>
-              <view class="zodiac-tag zodiac-tag--{{item.zodiacTone}}">
-                <text class="zodiac-symbol">{{item.zodiacSymbol}}</text>
-                <text>{{item.zodiacName}}</text>
-              </view>
-            </view>
-            <text class="archive-date">{{item.birthTimeText}}</text>
-            <text class="archive-place">{{item.birthPlace}} · UTC{{item.timezone >= 0 ? '+' : ''}}{{item.timezone}}</text>
-          </view>
-          <view
-            class="edit-action"
-            data-id="{{item.id}}"
-            catchtap="editArchive"
-            hover-class="edit-action--pressed"
-            role="button"
-            aria-label="编辑{{item.name}}档案"
-          >
-            <view class="edit-icon"></view>
-          </view>
-        </view>
-        <view
-          class="delete-action {{deletingArchiveId === item.id ? 'delete-action--loading' : ''}}"
-          data-id="{{item.id}}"
-          bindtap="requestDeleteArchive"
-          hover-class="delete-action--pressed"
-          role="button"
-          aria-label="删除{{item.name}}的档案"
-        >
-          <text>{{deletingArchiveId === item.id ? '删除中' : '删除'}}</text>
+          <view class="edit-icon"></view>
         </view>
       </view>
-    </scroll-view>
+    </mp-slideview>
   </view>
 </view>

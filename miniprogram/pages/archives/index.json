@@ -1,5 +1,7 @@
 {
   "enablePullDownRefresh": true,
   "backgroundColor": "#f6f7fa",
-  "usingComponents": {}
+  "usingComponents": {
+    "mp-slideview": "weui-miniprogram/slideview/slideview"
+  }
 }

@@ -217,14 +217,24 @@
       url="/pages/archives/index"
       hover-class="feature-card--pressed"
     >
-      <view class="feature-icon feature-icon--folder" aria-hidden="true">
-        <view class="folder-shape"></view>
+      <image
+        class="feature-card__background"
+        src="/assets/images/archive-background-01.png"
+        mode="widthFix"
+        aria-hidden="true"
+      />
+      <view class="feature-card__content">
+        <image
+          class="feature-icon"
+          src="/assets/images/archive-icon-01.png"
+          mode="aspectFit"
+          aria-hidden="true"
+        />
+        <view class="feature-copy">
+          <text class="feature-title">个人档案</text>
+          <text class="feature-subtitle">完善出生信息</text>
+        </view>
       </view>
-      <view class="feature-copy">
-        <text class="feature-title">个人档案</text>
-        <text class="feature-subtitle">完善出生信息</text>
-      </view>
-      <view class="feature-arrow" aria-hidden="true"></view>
     </navigator>
 
     <navigator
@@ -232,17 +242,24 @@
       url="/pages/reports/list"
       hover-class="feature-card--pressed"
     >
-      <view class="feature-icon feature-icon--report" aria-hidden="true">
-        <view class="report-shape">
-          <view class="report-line report-line--long"></view>
-          <view class="report-line"></view>
+      <image
+        class="feature-card__background"
+        src="/assets/images/archive-background-02.png"
+        mode="widthFix"
+        aria-hidden="true"
+      />
+      <view class="feature-card__content">
+        <image
+          class="feature-icon"
+          src="/assets/images/archive-icon-02.png"
+          mode="aspectFit"
+          aria-hidden="true"
+        />
+        <view class="feature-copy">
+          <text class="feature-title">我的报告</text>
+          <text class="feature-subtitle">查看星座解读</text>
         </view>
       </view>
-      <view class="feature-copy">
-        <text class="feature-title">我的报告</text>
-        <text class="feature-subtitle">查看星座解读</text>
-      </view>
-      <view class="feature-arrow" aria-hidden="true"></view>
     </navigator>
   </view>
   </view>
