@@ -67,18 +67,50 @@
       </view>
 
       <view class="interpretation-list">
-        <view
-          wx:for="{{interpretations}}"
-          wx:key="title"
-          class="interpretation-card"
-        >
-          <view class="card-title-row">
-            <view class="astro-symbol astro-symbol--{{item.tone}}" aria-hidden="true">{{item.symbol}}</view>
-            <text class="card-title">{{item.title}}</text>
+        <block wx:if="{{interpretationsLoading}}">
+          <view class="interpretation-card interpretation-skeleton" aria-hidden="true">
+            <view class="interpretation-skeleton__heading">
+              <view class="interpretation-skeleton__symbol"></view>
+              <view class="interpretation-skeleton__title"></view>
+            </view>
+            <view class="interpretation-skeleton__subtitle"></view>
+            <view class="interpretation-skeleton__line"></view>
+            <view class="interpretation-skeleton__line interpretation-skeleton__line--short"></view>
           </view>
-          <text class="card-subtitle">{{item.subtitle}}</text>
-          <text class="card-summary">{{item.summary}}</text>
-        </view>
+          <view class="interpretation-card interpretation-skeleton" aria-hidden="true">
+            <view class="interpretation-skeleton__heading">
+              <view class="interpretation-skeleton__symbol"></view>
+              <view class="interpretation-skeleton__title"></view>
+            </view>
+            <view class="interpretation-skeleton__subtitle"></view>
+            <view class="interpretation-skeleton__line"></view>
+            <view class="interpretation-skeleton__line interpretation-skeleton__line--short"></view>
+          </view>
+          <view class="interpretation-card interpretation-skeleton" aria-hidden="true">
+            <view class="interpretation-skeleton__heading">
+              <view class="interpretation-skeleton__symbol"></view>
+              <view class="interpretation-skeleton__title"></view>
+            </view>
+            <view class="interpretation-skeleton__subtitle"></view>
+            <view class="interpretation-skeleton__line"></view>
+            <view class="interpretation-skeleton__line interpretation-skeleton__line--short"></view>
+          </view>
+        </block>
+
+        <block wx:else>
+          <view
+            wx:for="{{interpretations}}"
+            wx:key="title"
+            class="interpretation-card"
+          >
+            <view class="card-title-row">
+              <view class="astro-symbol astro-symbol--{{item.tone}}" aria-hidden="true">{{item.symbol}}</view>
+              <text class="card-title">{{item.title}}</text>
+            </view>
+            <text class="card-subtitle">{{item.subtitle}}</text>
+            <text class="card-summary">{{item.summary}}</text>
+          </view>
+        </block>
       </view>
     </block>
   </view>

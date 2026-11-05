@@ -54,11 +54,25 @@
       aria-label="本命盘"
     ></canvas>
     <view
-      wx:if="{{chartLoadState !== 'ready'}}"
+      wx:if="{{chartLoadState === 'loading'}}"
+      class="chart-skeleton"
+      aria-label="本命盘加载中"
+    >
+      <view class="chart-skeleton__disc" aria-hidden="true">
+        <view class="chart-skeleton__ring chart-skeleton__ring--middle"></view>
+        <view class="chart-skeleton__ring chart-skeleton__ring--inner"></view>
+        <view class="chart-skeleton__line chart-skeleton__line--horizontal"></view>
+        <view class="chart-skeleton__line chart-skeleton__line--vertical"></view>
+      </view>
+      <view class="chart-skeleton__control chart-skeleton__control--left" aria-hidden="true"></view>
+      <view class="chart-skeleton__control chart-skeleton__control--right" aria-hidden="true"></view>
+    </view>
+
+    <view
+      wx:elif="{{chartLoadState !== 'ready'}}"
       class="chart-status chart-status--{{chartLoadState}}"
     >
       <view class="chart-status__card">
-        <view wx:if="{{chartLoadState === 'loading'}}" class="chart-status__spinner"></view>
         <text class="chart-status__message">{{chartStatusMessage}}</text>
         <button
           wx:if="{{chartLoadState === 'error'}}"

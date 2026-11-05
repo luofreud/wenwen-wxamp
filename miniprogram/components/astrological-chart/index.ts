@@ -485,7 +485,7 @@ Component({
     styleSheetVisible: false,
     chartReady: false,
     chartLoadState: 'loading' as ChartLoadState,
-    chartStatusMessage: '正在生成本命盘…',
+    chartStatusMessage: '',
     settings: DEFAULT_CHART_SETTINGS,
     themeOptions: [
       { value: 'degree', label: '度数' },
@@ -595,7 +595,7 @@ Component({
         requestRuntime.payload = null
         this.setData({
           chartLoadState: 'loading',
-          chartStatusMessage: '正在生成本命盘…',
+          chartStatusMessage: '',
           detail: createEmptyDetail(),
         }, () => this.drawChart())
       }

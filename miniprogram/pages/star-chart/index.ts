@@ -122,6 +122,7 @@ Page({
     isSharingChart: false,
     archiveState: 'loading' as ArchiveViewState,
     archiveName: '星盘详情',
+    interpretationsLoading: true,
     interpretations: [] as InterpretationItem[],
   },
 
@@ -174,6 +175,7 @@ Page({
         this.setData({
           archiveState: 'error',
           archiveName: '星盘详情',
+          interpretationsLoading: false,
           interpretations: [],
         })
       })
@@ -196,6 +198,7 @@ Page({
       this.setData({
         archiveState: 'empty',
         archiveName: '星盘详情',
+        interpretationsLoading: false,
         interpretations: [],
       })
       return
@@ -217,11 +220,17 @@ Page({
 
     const requestId = runtime.requestId + 1
     runtime.requestId = requestId
-    this.setData({ interpretations: [] })
+    this.setData({
+      interpretationsLoading: true,
+      interpretations: [],
+    })
 
     const latitude = archive.birth_latitude
     const longitude = archive.birth_longitude
-    if (latitude === null || longitude === null) return
+    if (latitude === null || longitude === null) {
+      this.setData({ interpretationsLoading: false })
+      return
+    }
 
     try {
       const birthday = parseBirthTime(archive.birth_time)
@@ -243,11 +252,17 @@ Page({
       if (response.code !== 200) {
         throw new Error(response.msg || '本命盘解读加载失败')
       }
-      this.setData({ interpretations: parseInterpretations(response.data) })
+      this.setData({
+        interpretationsLoading: false,
+        interpretations: parseInterpretations(response.data),
+      })
     } catch {
       const currentRuntime = analysisRuntimeByPage.get(this)
       if (!currentRuntime || currentRuntime.requestId !== requestId) return
-      this.setData({ interpretations: [] })
+      this.setData({
+        interpretationsLoading: false,
+        interpretations: [],
+      })
     }
   },
 

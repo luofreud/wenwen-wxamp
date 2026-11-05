@@ -164,6 +164,67 @@ page {
   margin-bottom: 0;
 }
 
+.interpretation-skeleton {
+  height: 204rpx;
+}
+
+.interpretation-skeleton__heading {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.interpretation-skeleton__symbol,
+.interpretation-skeleton__title,
+.interpretation-skeleton__subtitle,
+.interpretation-skeleton__line {
+  background: linear-gradient(90deg, #e9e7ed 20%, #f7f5f9 50%, #e9e7ed 80%);
+  background-size: 220% 100%;
+  animation: interpretation-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.interpretation-skeleton__symbol {
+  width: 36rpx;
+  height: 36rpx;
+  flex: none;
+  border-radius: 50%;
+}
+
+.interpretation-skeleton__title {
+  width: 210rpx;
+  height: 32rpx;
+  margin-left: 12rpx;
+  border-radius: 16rpx;
+}
+
+.interpretation-skeleton__subtitle {
+  width: 290rpx;
+  height: 22rpx;
+  margin-bottom: 22rpx;
+  border-radius: 11rpx;
+}
+
+.interpretation-skeleton__line {
+  width: 100%;
+  height: 20rpx;
+  border-radius: 10rpx;
+}
+
+.interpretation-skeleton__line--short {
+  width: 68%;
+  margin-top: 12rpx;
+}
+
+@keyframes interpretation-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .card-title-row {
   display: flex;
   align-items: center;
@@ -211,14 +272,14 @@ page {
   display: block;
   margin-bottom: 20rpx;
   color: #A6A6A6;
-  font-size: 24rpx;
+  font-size: 26rpx;
   line-height: 36rpx;
 }
 
 .card-summary {
   display: block;
   color: #383838;
-  font-size: 24rpx;
+  font-size: 26rpx;
   line-height: 32rpx;
 }
 

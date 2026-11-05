@@ -23,11 +23,58 @@
     enhanced="{{true}}"
     show-scrollbar="{{false}}"
   >
-    <view wx:if="{{!dataReady}}" class="home-loading" aria-label="首页数据加载中">
-      <view class="loading-orbit" aria-hidden="true">
-        <view class="loading-core"></view>
+    <view wx:if="{{!dataReady}}" class="home-skeleton" aria-label="首页数据加载中">
+      <view class="home-skeleton__mood" aria-hidden="true">
+        <view class="skeleton-block skeleton-user"></view>
+        <view class="home-skeleton__mood-body">
+          <view class="skeleton-block skeleton-score"></view>
+          <view class="home-skeleton__luck-grid">
+            <view class="skeleton-block skeleton-luck"></view>
+            <view class="skeleton-block skeleton-luck"></view>
+            <view class="skeleton-block skeleton-luck"></view>
+            <view class="skeleton-block skeleton-luck"></view>
+          </view>
+        </view>
       </view>
-      <text class="loading-text">正在读取今日星象…</text>
+
+      <view class="home-skeleton__live" aria-hidden="true">
+        <view class="skeleton-block skeleton-live-title"></view>
+        <view class="skeleton-block skeleton-live-line"></view>
+        <view class="skeleton-block skeleton-live-line skeleton-live-line--short"></view>
+        <view class="home-skeleton__live-actions">
+          <view class="skeleton-block skeleton-live-viewers"></view>
+          <view class="skeleton-block skeleton-live-button"></view>
+        </view>
+      </view>
+
+      <view class="skeleton-block home-skeleton__banner" aria-hidden="true"></view>
+
+      <view class="home-skeleton__reports" aria-hidden="true">
+        <view class="home-skeleton__report">
+          <view class="home-skeleton__report-copy">
+            <view class="skeleton-block skeleton-report-title"></view>
+            <view class="skeleton-block skeleton-report-line"></view>
+            <view class="skeleton-block skeleton-report-line skeleton-report-line--short"></view>
+          </view>
+          <view class="skeleton-block skeleton-report-cover"></view>
+        </view>
+        <view class="home-skeleton__report">
+          <view class="home-skeleton__report-copy">
+            <view class="skeleton-block skeleton-report-title"></view>
+            <view class="skeleton-block skeleton-report-line"></view>
+            <view class="skeleton-block skeleton-report-line skeleton-report-line--short"></view>
+          </view>
+          <view class="skeleton-block skeleton-report-cover"></view>
+        </view>
+        <view class="home-skeleton__report">
+          <view class="home-skeleton__report-copy">
+            <view class="skeleton-block skeleton-report-title"></view>
+            <view class="skeleton-block skeleton-report-line"></view>
+            <view class="skeleton-block skeleton-report-line skeleton-report-line--short"></view>
+          </view>
+          <view class="skeleton-block skeleton-report-cover"></view>
+        </view>
+      </view>
     </view>
     <view wx:else class="home-content">
   

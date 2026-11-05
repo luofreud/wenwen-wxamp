@@ -26,6 +26,92 @@
   background: transparent;
 }
 
+.chart-skeleton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.chart-skeleton__disc {
+  position: relative;
+  width: 86%;
+  height: 86%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(105deg, #ebe8ef 20%, #f8f6fa 42%, #ebe8ef 64%);
+  background-size: 240% 100%;
+  animation: chart-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.chart-skeleton__ring {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.chart-skeleton__ring--middle {
+  top: 12%;
+  right: 12%;
+  bottom: 12%;
+  left: 12%;
+  border: 18rpx solid rgba(255, 255, 255, 0.74);
+  background: rgba(244, 242, 247, 0.94);
+}
+
+.chart-skeleton__ring--inner {
+  top: 32%;
+  right: 32%;
+  bottom: 32%;
+  left: 32%;
+  border: 12rpx solid rgba(230, 226, 235, 0.82);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.chart-skeleton__line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  transform: translate(-50%, -50%);
+}
+
+.chart-skeleton__line--horizontal {
+  width: 100%;
+  height: 8rpx;
+}
+
+.chart-skeleton__line--vertical {
+  width: 8rpx;
+  height: 100%;
+}
+
+.chart-skeleton__control {
+  position: absolute;
+  bottom: 14rpx;
+  width: 128rpx;
+  height: 52rpx;
+  border-radius: 26rpx;
+  background: linear-gradient(105deg, #e9e6ed 20%, #f7f5f9 42%, #e9e6ed 64%);
+  background-size: 240% 100%;
+  animation: chart-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.chart-skeleton__control--left {
+  left: 12rpx;
+}
+
+.chart-skeleton__control--right {
+  right: 12rpx;
+}
+
 .chart-status {
   position: absolute;
   top: 0;
@@ -54,17 +140,6 @@
   box-sizing: border-box;
 }
 
-.chart-status__spinner {
-  width: 42rpx;
-  height: 42rpx;
-  margin-bottom: 20rpx;
-  border: 4rpx solid rgba(123, 71, 229, 0.14);
-  border-top-color: #7b47e5;
-  border-radius: 50%;
-  box-sizing: border-box;
-  animation: chart-status-spin 760ms linear infinite;
-}
-
 .chart-status__message {
   color: #665d73;
   font-size: 25rpx;
@@ -89,8 +164,14 @@
   border: 0;
 }
 
-@keyframes chart-status-spin {
-  to { transform: rotate(360deg); }
+@keyframes chart-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .corner-control {
