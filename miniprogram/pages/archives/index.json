@@ -2,6 +2,7 @@
   "enablePullDownRefresh": true,
   "backgroundColor": "#f6f7fa",
   "usingComponents": {
+    "archive-empty": "/components/archive-empty/index",
     "mp-slideview": "weui-miniprogram/slideview/slideview"
   }
 }

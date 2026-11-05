@@ -31,7 +31,9 @@
     </view>
     <view wx:else class="home-content">
   
-  <archive-empty wx:if="{{fortuneState === 'empty'}}" />
+  <view class="index-empty" wx:if="{{fortuneState === 'empty'}}">
+    <archive-empty />
+  </view>
 
   <view wx:else class="mood-card" bindtap="handleFortuneCardTap">
     <image

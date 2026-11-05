@@ -18,7 +18,7 @@
       />
     </view>
 
-    <view class="page-heading">
+    <view wx:if="{{archiveState !== 'empty'}}" class="page-heading">
       <text class="page-title">{{archiveName}}</text>
       <view class="heading-actions">
         <navigator
@@ -43,38 +43,43 @@
   </view>
 
   <view class="star-chart-content">
-    <view class="chart-shell">
-      <astrological-chart id="astrological-chart" />
+    <view wx:if="{{archiveState === 'empty'}}" class="archive-empty">
+      <archive-empty />
     </view>
 
-    <view class="notice-banner">
-      <image class="notice-icon" src="/assets/icons/warn.png" mode="aspectFit" aria-hidden="true" />
-      <text class="notice-text">当前内容为免费内容，仅供您在娱乐中探索自我，无任何现实指导意义。</text>
-    </view>
-
-    <view class="section-heading">
-      <image
-        class="section-title-image"
-        src="/assets/images/subtitle.png"
-        mode="widthFix"
-        aria-label="本命盘解读"
-      />
-    </view>
-
-    <view class="interpretation-list">
-      <view
-        wx:for="{{interpretations}}"
-        wx:key="title"
-        class="interpretation-card"
-      >
-        <view class="card-title-row">
-          <view class="astro-symbol astro-symbol--{{item.tone}}" aria-hidden="true">{{item.symbol}}</view>
-          <text class="card-title">{{item.title}}</text>
-        </view>
-        <text class="card-subtitle">{{item.subtitle}}</text>
-        <text class="card-summary">{{item.summary}}</text>
+    <block wx:else>
+      <view class="chart-shell">
+        <astrological-chart id="astrological-chart" />
       </view>
-    </view>
 
+      <view class="notice-banner">
+        <image class="notice-icon" src="/assets/icons/warn.png" mode="aspectFit" aria-hidden="true" />
+        <text class="notice-text">当前内容为免费内容，仅供您在娱乐中探索自我，无任何现实指导意义。</text>
+      </view>
+
+      <view class="section-heading">
+        <image
+          class="section-title-image"
+          src="/assets/images/subtitle.png"
+          mode="widthFix"
+          aria-label="本命盘解读"
+        />
+      </view>
+
+      <view class="interpretation-list">
+        <view
+          wx:for="{{interpretations}}"
+          wx:key="title"
+          class="interpretation-card"
+        >
+          <view class="card-title-row">
+            <view class="astro-symbol astro-symbol--{{item.tone}}" aria-hidden="true">{{item.symbol}}</view>
+            <text class="card-title">{{item.title}}</text>
+          </view>
+          <text class="card-subtitle">{{item.subtitle}}</text>
+          <text class="card-summary">{{item.summary}}</text>
+        </view>
+      </view>
+    </block>
   </view>
 </view>

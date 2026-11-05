@@ -56,12 +56,9 @@
     <text class="state-copy">{{loadError}}</text>
     <button class="state-button" bindtap="retryLoad">重新加载</button>
   </view>
-
-  <view wx:elif="{{archives.length === 0}}" class="state-card state-card--empty">
-    <view class="state-orbit">✦</view>
-    <text class="state-title">建立第一份星象档案</text>
-    <text class="state-copy">记录出生时间与地点，开启属于你的星盘故事。</text>
-    <navigator class="state-button" url="/pages/archives/edit">添加档案</navigator>
+  
+  <view wx:elif="{{archives.length === 0}}" class="archive-empty">
+    <archive-empty />
   </view>
 
   <view wx:else class="archive-list">

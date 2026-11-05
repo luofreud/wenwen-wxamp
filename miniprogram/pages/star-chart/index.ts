@@ -23,6 +23,8 @@ interface AstrologicalChartComponent {
   exportChartImage(): Promise<string>
 }
 
+type ArchiveViewState = 'empty' | 'error' | 'loading' | 'ready'
+
 const NATAL_ANALYSIS_PATH = '/house9calculate' as const
 const analysisRuntimeByPage = new WeakMap<object, AnalysisRuntime>()
 
@@ -118,6 +120,7 @@ Page({
     titleBarRight: 0,
     pageHeight: 0,
     isSharingChart: false,
+    archiveState: 'loading' as ArchiveViewState,
     archiveName: '星盘详情',
     interpretations: [] as InterpretationItem[],
   },
@@ -168,24 +171,40 @@ Page({
       })
       .catch(() => {
         if (!analysisRuntimeByPage.has(this)) return
-        this.setData({ archiveName: '星盘详情', interpretations: [] })
+        this.setData({
+          archiveState: 'error',
+          archiveName: '星盘详情',
+          interpretations: [],
+        })
       })
   },
 
   syncNatalAnalysis(snapshot: Readonly<ArchiveState>) {
     const runtime = analysisRuntimeByPage.get(this)
     if (!runtime) return
-    if (snapshot.isLoading) return
+    if (snapshot.isLoading) {
+      if (this.data.archiveState !== 'ready') {
+        this.setData({ archiveState: 'loading' })
+      }
+      return
+    }
 
     const archive = archiveStore.selectedArchive
     if (!archive) {
       runtime.archiveKey = ''
       runtime.requestId += 1
-      this.setData({ archiveName: '星盘详情', interpretations: [] })
+      this.setData({
+        archiveState: 'empty',
+        archiveName: '星盘详情',
+        interpretations: [],
+      })
       return
     }
 
-    this.setData({ archiveName: archive.name })
+    this.setData({
+      archiveState: 'ready',
+      archiveName: archive.name,
+    })
     const nextArchiveKey = archiveAnalysisKey(archive)
     if (runtime.archiveKey === nextArchiveKey) return
     runtime.archiveKey = nextArchiveKey

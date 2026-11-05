@@ -7,13 +7,15 @@
     <view class="sparkle sparkle--left-bottom"></view>
     <view class="sparkle sparkle--right-top"></view>
     <view class="sparkle sparkle--right-bottom"></view>
-    <navigator
+    <view
       class="archive-empty__button"
-      url="/pages/archives/edit"
+      bindtap="navigateToArchiveEdit"
       hover-class="archive-empty__button--pressed"
+      role="button"
+      aria-label="立即添加档案"
     >
       <text class="archive-empty__plus">+</text>
       <text class="archive-empty__button-label">立即添加</text>
-    </navigator>
+    </view>
   </view>
 </view>

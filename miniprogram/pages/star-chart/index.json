@@ -3,6 +3,7 @@
   "disableScroll": false,
   "navigationBarTitleText": "星图",
   "usingComponents": {
+    "archive-empty": "/components/archive-empty/index",
     "astrological-chart": "/components/astrological-chart/index"
   }
 }
