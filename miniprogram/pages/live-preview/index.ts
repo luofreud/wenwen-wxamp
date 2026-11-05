@@ -4,10 +4,54 @@ import {
 } from '../../services/index'
 import type { LiveEvent } from '../../services/index'
 
+type LiveTimeState = 'upcoming' | 'live' | 'ended'
+
+const DEFAULT_LIVE_DURATION_MS = 3 * 60 * 60 * 1000
+const liveStateTimerByPage = new WeakMap<object, ReturnType<typeof setInterval>>()
+
+const openWebUrl = (url: string | null | undefined, emptyMessage: string): void => {
+  const targetUrl = url?.trim() ?? ''
+  if (!/^https:\/\//i.test(targetUrl)) {
+    wx.showToast({ title: emptyMessage, icon: 'none' })
+    return
+  }
+
+  wx.navigateTo({
+    url: `/pages/web-view/index?url=${encodeURIComponent(targetUrl)}`,
+  })
+}
+
 // 预约前申请直播提醒订阅授权；后续可追加第二个提醒模板。
 const LIVE_REMINDER_TEMPLATE_IDS = [
   'EdGu2lM-BKrA3-cXAxaH0jJpv6N31yWaJ4lxjqHYCSU',
 ]
+
+const formatLiveStartAt = (value: string | null | undefined): string => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(value?.trim() ?? '')
+  if (!match) return '时间待定'
+
+  const month = Number(match[2])
+  const day = Number(match[3])
+  return `${match[1]}年${month}月${day}日 ${match[4]}:${match[5]}`
+}
+
+const resolveLiveTimeState = (
+  startAt: string | null | undefined,
+  endAt: string | null | undefined,
+  now = Date.now(),
+): LiveTimeState => {
+  const startTime = Date.parse(startAt ?? '')
+  if (!Number.isFinite(startTime)) return 'upcoming'
+
+  const parsedEndTime = Date.parse(endAt ?? '')
+  const endTime = Number.isFinite(parsedEndTime) && parsedEndTime >= startTime
+    ? parsedEndTime
+    : startTime + DEFAULT_LIVE_DURATION_MS
+
+  if (now < startTime) return 'upcoming'
+  if (now > endTime) return 'ended'
+  return 'live'
+}
 
 // 当前模板同意一次对应开播前两次提醒，因此同意时向服务端声明 2 次。
 const getAcceptedSubscriptionCount = (): Promise<0 | 2> => {
@@ -35,6 +79,8 @@ Page({
   data: {
     eventNo: '',
     liveEvent: null as LiveEvent | null,
+    liveStartAtText: '',
+    liveTimeState: 'upcoming' as LiveTimeState,
     isLoading: true,
     isReserving: false,
     loadError: '',
@@ -52,6 +98,19 @@ Page({
 
     this.setData({ eventNo })
     void this.loadLiveEvent()
+  },
+
+  onShow() {
+    this.refreshLiveTimeState()
+    this.startLiveStateTimer()
+  },
+
+  onHide() {
+    this.stopLiveStateTimer()
+  },
+
+  onUnload() {
+    this.stopLiveStateTimer()
   },
 
   onPullDownRefresh() {
@@ -72,15 +131,23 @@ Page({
       if (response.code !== 200) {
         this.setData({
           liveEvent: null,
+          liveStartAtText: '',
+          liveTimeState: 'upcoming',
           loadError: response.msg || '直播详情加载失败',
         })
         return
       }
 
-      this.setData({ liveEvent: response.data })
+      this.setData({
+        liveEvent: response.data,
+        liveStartAtText: formatLiveStartAt(response.data.start_at),
+        liveTimeState: resolveLiveTimeState(response.data.start_at, response.data.end_at),
+      })
     } catch (error) {
       this.setData({
         liveEvent: null,
+        liveStartAtText: '',
+        liveTimeState: 'upcoming',
         loadError: error instanceof Error
           ? error.message
           : '网络开小差了，请稍后重试。',
@@ -102,6 +169,45 @@ Page({
     }
 
     wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  startLiveStateTimer() {
+    if (liveStateTimerByPage.has(this)) return
+
+    const timer = setInterval(() => {
+      this.refreshLiveTimeState()
+    }, 30 * 1000)
+    liveStateTimerByPage.set(this, timer)
+  },
+
+  stopLiveStateTimer() {
+    const timer = liveStateTimerByPage.get(this)
+    if (timer === undefined) return
+    clearInterval(timer)
+    liveStateTimerByPage.delete(this)
+  },
+
+  refreshLiveTimeState() {
+    const liveEvent = this.data.liveEvent
+    if (!liveEvent) return
+
+    const liveTimeState = resolveLiveTimeState(liveEvent.start_at, liveEvent.end_at)
+    if (liveTimeState !== this.data.liveTimeState) {
+      this.setData({ liveTimeState })
+    }
+  },
+
+  handlePrimaryAction() {
+    if (this.data.liveTimeState === 'live') {
+      this.enterLiveRoom()
+      return
+    }
+    if (this.data.liveTimeState === 'ended') return
+    void this.reserveLiveEvent()
+  },
+
+  enterLiveRoom() {
+    openWebUrl(this.data.liveEvent?.h5_url, '直播链接暂不可用')
   },
 
   async reserveLiveEvent(): Promise<void> {

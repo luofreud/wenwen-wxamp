@@ -34,7 +34,7 @@
       <view class="meta-list">
         <view class="meta-row">
           <text class="meta-label">直播时间：</text>
-          <text class="meta-value" user-select="true">{{liveEvent.display_time_text}}</text>
+          <text class="meta-value" user-select="true">{{liveStartAtText}}</text>
         </view>
         <view class="meta-row">
           <text class="meta-label">直播嘉宾：</text>
@@ -59,12 +59,12 @@
     <view class="action-area">
       <view class="action-button-wrap action-button-wrap--reserve">
         <button
-          class="action-button action-button--reserve {{liveEvent.reservation_status === 'reserved' ? 'action-button--reserved' : ''}}"
+          class="action-button action-button--reserve {{liveTimeState === 'ended' || (liveTimeState === 'upcoming' && liveEvent.reservation_status === 'reserved') ? 'action-button--reserved' : ''}}"
           hover-class="action-button--pressed"
-          loading="{{isReserving}}"
-          disabled="{{isReserving || liveEvent.reservation_status === 'reserved'}}"
-          bindtap="reserveLiveEvent"
-        >{{isReserving ? '预约中' : (liveEvent.reservation_status === 'reserved' ? '已预约' : '预约直播')}}</button>
+          loading="{{liveTimeState === 'upcoming' && isReserving}}"
+          disabled="{{isReserving || liveTimeState === 'ended' || (liveTimeState === 'upcoming' && liveEvent.reservation_status === 'reserved')}}"
+          bindtap="handlePrimaryAction"
+        >{{isReserving ? '预约中' : (liveTimeState === 'live' ? '进入直播间' : (liveTimeState === 'ended' ? '已结束' : (liveEvent.reservation_status === 'reserved' ? '已预约' : '预约直播')))}}</button>
       </view>
       <view class="action-button-wrap">
         <button
@@ -74,5 +74,6 @@
         >分享直播</button>
       </view>
     </view>
+
   </view>
 </view>
