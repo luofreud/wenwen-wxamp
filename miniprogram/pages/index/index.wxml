@@ -145,7 +145,7 @@
   <view wx:if="{{liveEvent}}" class="live-card">
     <image
       class="live-card__background"
-      src="/assets/images/live-pre-backgroud.png"
+      src="https://xzxyshijin.oss-cn-hangzhou.aliyuncs.com/shuijingTP/live-pre-backgroud.png"
       mode="widthFix"
       aria-hidden="true"
     />
@@ -182,7 +182,7 @@
 
   <image
     class="app-banner"
-    src="/assets/images/home-banner.png"
+    src="https://xzxyshijin.oss-cn-hangzhou.aliyuncs.com/shuijingTP/home-banner.png"
     mode="widthFix"
     aria-label="问问星座APP，真人专业解析"
   />
