@@ -1,0 +1,19 @@
+<view class="archive-empty">
+  <text class="archive-empty__title">今天的心情，想被看见吗？</text>
+  <text class="archive-empty__description">添加档案，让星星陪你读懂此刻的自己</text>
+
+  <view class="archive-empty__action-stage">
+    <view class="sparkle sparkle--left-top"></view>
+    <view class="sparkle sparkle--left-bottom"></view>
+    <view class="sparkle sparkle--right-top"></view>
+    <view class="sparkle sparkle--right-bottom"></view>
+    <navigator
+      class="archive-empty__button"
+      url="/pages/archives/edit"
+      hover-class="archive-empty__button--pressed"
+    >
+      <text class="archive-empty__plus">+</text>
+      <text class="archive-empty__button-label">立即添加</text>
+    </navigator>
+  </view>
+</view>

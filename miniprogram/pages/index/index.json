@@ -1,3 +1,5 @@
 {
-  "usingComponents": {}
+  "usingComponents": {
+    "archive-empty": "/components/archive-empty/index"
+  }
 }

@@ -30,45 +30,8 @@
       <text class="loading-text">正在读取今日星象…</text>
     </view>
     <view wx:else class="home-content">
-  <view wx:if="{{fortuneState === 'empty'}}" class="mood-card mood-card--empty">
-    <image
-      class="mood-card__background"
-      src="/assets/images/emo-background.png"
-      mode="widthFix"
-      aria-hidden="true"
-    />
-    <view class="mood-content">
-      <view
-        class="mood-mine-action"
-        catchtap="switchToMine"
-        role="button"
-        aria-label="前往我的页面签到"
-      ></view>
-      <text class="user-name">今天的心情，想被看见吗？</text>
-      <view class="mood-columns">
-        <view class="mood-overview">
-          <view class="score-heading">
-            <image
-              class="score-background"
-              src="/assets/images/score-background.png"
-              mode="scaleToFill"
-              aria-hidden="true"
-            />
-            <text class="score-label">添加档案，让星星陪你读懂此刻的自己</text>
-          </view>
-        </view>
-        <view class="luck-grid">
-          <navigator class="luck-card" url="/pages/archives/edit" hover-class="content-card--pressed">
-            <view class="luck-icon luck-icon--number">+</view>
-            <view class="luck-copy">
-              <text class="luck-value">立即添加</text>
-              <text class="luck-label">创建档案</text>
-            </view>
-          </navigator>
-        </view>
-      </view>
-    </view>
-  </view>
+  
+  <archive-empty wx:if="{{fortuneState === 'empty'}}" />
 
   <view wx:else class="mood-card" bindtap="handleFortuneCardTap">
     <image
