@@ -10,6 +10,7 @@ interface LiveEvent {
   source_provider: string
   external_live_id: string
   title: string
+  cover_url: string
   host_name: string
   description: string
   display_time_text: string
@@ -26,6 +27,21 @@ interface LiveEvent {
 
 interface LiveEventList extends PaginationResult {
   items: LiveEvent[]
+}
+
+interface UpcomingLiveEvent {
+  event_no: string
+  title: string
+  start_at: string
+  status: LiveEventStatus
+  reservation_status: ReservationStatus
+  reservation_count: number
+  description?: string
+  display_time_text?: string
+}
+
+interface UpcomingLiveEventList extends PaginationResult {
+  items: UpcomingLiveEvent[]
 }
 
 interface ReserveLiveEventParams {
@@ -51,6 +67,12 @@ const getLiveEvents = (
   return http<LiveEventList>({
     url: '/live-events',
     params: { ...params },
+  })
+}
+
+const getUpcomingLiveEvents = (): Promise<ApiResponse<UpcomingLiveEventList>> => {
+  return http<UpcomingLiveEventList>({
+    url: '/api/wechat/v1/live-events/upcoming',
   })
 }
 
@@ -84,6 +106,7 @@ export {
   cancelLiveEventReservation,
   getLiveEvent,
   getLiveEvents,
+  getUpcomingLiveEvents,
   reserveLiveEvent,
 }
 export type {
@@ -94,4 +117,6 @@ export type {
   LiveEventStatus,
   ReservationStatus,
   ReserveLiveEventParams,
+  UpcomingLiveEvent,
+  UpcomingLiveEventList,
 }

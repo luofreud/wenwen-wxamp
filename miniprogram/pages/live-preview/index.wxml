@@ -18,29 +18,12 @@
   </view>
 
   <view wx:else class="detail-card">
-    <view class="poster">
-      <view class="poster-orbit poster-orbit--large"></view>
-      <view class="poster-orbit poster-orbit--small"></view>
-      <view class="poster-spark poster-spark--one">✦</view>
-      <view class="poster-spark poster-spark--two">✦</view>
-      <view class="poster-spark poster-spark--three">·</view>
-
-      <view class="poster-center">
-        <view class="poster-title">
-          <text class="poster-title__accent">星象</text>
-          <text class="poster-title__main">直播间</text>
-        </view>
-        <text class="poster-tag">{{liveEvent.host_name}} · LIVE</text>
-      </view>
-
-      <view class="poster-footer">
-        <view class="poster-ribbon">
-          <text>问问星座</text>
-          <text>特别直播</text>
-        </view>
-        <text class="poster-footer__copy">{{liveEvent.display_time_text}}</text>
-      </view>
-    </view>
+    <image
+      class="poster"
+      src="{{liveEvent.cover_url}}"
+      mode="widthFix"
+      aria-label="{{liveEvent.title}}直播封面"
+    />
 
     <view class="live-info">
       <text class="live-title">{{liveEvent.title}}</text>
@@ -74,18 +57,22 @@
     </view>
 
     <view class="action-area">
-      <button
-        class="action-button action-button--reserve {{liveEvent.reservation_status === 'reserved' ? 'action-button--reserved' : ''}}"
-        hover-class="action-button--pressed"
-        loading="{{isReserving}}"
-        disabled="{{isReserving || liveEvent.reservation_status === 'reserved'}}"
-        bindtap="reserveLiveEvent"
-      >{{isReserving ? '预约中' : (liveEvent.reservation_status === 'reserved' ? '已预约' : '预约直播')}}</button>
-      <button
-        class="action-button action-button--share"
-        hover-class="action-button--pressed"
-        open-type="share"
-      >分享直播</button>
+      <view class="action-button-wrap action-button-wrap--reserve">
+        <button
+          class="action-button action-button--reserve {{liveEvent.reservation_status === 'reserved' ? 'action-button--reserved' : ''}}"
+          hover-class="action-button--pressed"
+          loading="{{isReserving}}"
+          disabled="{{isReserving || liveEvent.reservation_status === 'reserved'}}"
+          bindtap="reserveLiveEvent"
+        >{{isReserving ? '预约中' : (liveEvent.reservation_status === 'reserved' ? '已预约' : '预约直播')}}</button>
+      </view>
+      <view class="action-button-wrap">
+        <button
+          class="action-button action-button--share"
+          hover-class="action-button--pressed"
+          open-type="share"
+        >分享直播</button>
+      </view>
     </view>
   </view>
 </view>

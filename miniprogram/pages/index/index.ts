@@ -1,6 +1,6 @@
 // pages/index/index.ts
-import { getAssessmentTypes, getLiveEvents, requestXingpango } from '../../services/index'
-import type { Archive, AssessmentType, LiveEvent } from '../../services/index'
+import { getAssessmentTypes, getUpcomingLiveEvents, requestXingpango } from '../../services/index'
+import type { Archive, AssessmentType, UpcomingLiveEvent } from '../../services/index'
 import { archiveStore } from '../../stores/index'
 import type { ArchiveState } from '../../stores/index'
 
@@ -42,7 +42,8 @@ interface HomeFortuneRuntime {
   unsubscribe: (() => void) | null
 }
 
-interface HomeLiveEvent extends LiveEvent {
+interface HomeLiveEvent extends UpcomingLiveEvent {
+  description: string
   detailUrl: string
 }
 
@@ -136,6 +137,17 @@ function formatDate(value: Date): string {
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`
 }
 
+function formatLiveStartTime(value: string): string {
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) return '直播时间待公布'
+
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const hour = String(date.getHours()).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0')
+  return `${month}月${day}日 ${hour}:${minute} 开播`
+}
+
 function archiveFortuneKey(archive: Archive, date: string): string {
   return [
     archive.id,
@@ -215,6 +227,10 @@ Page({
   },
 
   onShow() {
+    if (!homeFortuneRuntime.has(this)) {
+      homeFortuneRuntime.set(this, createHomeFortuneRuntime())
+      this.bindArchiveStore()
+    }
     if (!this.data.navigationReady) {
       this.initNavigation()
     }
@@ -457,21 +473,26 @@ Page({
 
   async loadLiveEvent(): Promise<void> {
     try {
-      const response = await getLiveEvents({
-        page: 1,
-        page_size: 1,
-      })
+      const response = await getUpcomingLiveEvents()
 
-      if (response.code !== 200 || response.data.items.length === 0) {
+      if (
+        response.code !== 200
+        || !Array.isArray(response.data?.items)
+        || response.data.items.length === 0
+      ) {
         this.setData({ liveEvent: null })
         return
       }
 
       const liveEvent = response.data.items[0]
       const reservationCount = Math.max(0, Math.floor(liveEvent.reservation_count || 0))
+      const description = liveEvent.description?.trim()
+        || liveEvent.display_time_text?.trim()
+        || formatLiveStartTime(liveEvent.start_at)
       this.setData({
         liveEvent: {
           ...liveEvent,
+          description,
           reservation_count: reservationCount,
           detailUrl: `/pages/live-preview/index?id=${encodeURIComponent(liveEvent.event_no)}`,
         },

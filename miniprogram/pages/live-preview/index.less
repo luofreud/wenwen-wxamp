@@ -7,7 +7,7 @@ page {
 .live-preview-page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 30rpx 30rpx calc(60rpx + env(safe-area-inset-bottom));
+  padding: 24rpx 24rpx calc(60rpx + env(safe-area-inset-bottom));
   overflow: hidden;
   background: #f5f7f9;
 }
@@ -132,168 +132,11 @@ page {
 }
 
 .poster {
-  position: relative;
+  display: block;
   width: 100%;
-  height: 300rpx;
+  height: auto;
   flex: none;
-  overflow: hidden;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.44) 25%, transparent 25%) 0 0 / 34rpx 34rpx,
-    linear-gradient(315deg, rgba(255, 220, 199, 0.26) 25%, transparent 25%) 0 0 / 34rpx 34rpx,
-    linear-gradient(145deg, #fff5f1 0%, #fffaf7 54%, #ffffff 100%);
-}
-
-.poster::before {
-  position: absolute;
-  top: -82rpx;
-  right: -38rpx;
-  width: 280rpx;
-  height: 280rpx;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 177, 116, 0.24), rgba(255, 177, 116, 0));
-  content: '';
-}
-
-.poster-orbit {
-  position: absolute;
-  border: 2rpx solid rgba(239, 144, 76, 0.15);
-  border-radius: 50%;
-  transform: rotate(-18deg);
-}
-
-.poster-orbit--large {
-  top: 30rpx;
-  left: -54rpx;
-  width: 260rpx;
-  height: 96rpx;
-}
-
-.poster-orbit--small {
-  top: 48rpx;
-  right: 54rpx;
-  width: 116rpx;
-  height: 46rpx;
-  transform: rotate(22deg);
-}
-
-.poster-spark {
-  position: absolute;
-  color: #f5a45f;
-  line-height: 1;
-}
-
-.poster-spark--one {
-  top: 34rpx;
-  left: 148rpx;
-  font-size: 24rpx;
-}
-
-.poster-spark--two {
-  top: 78rpx;
-  right: 112rpx;
-  color: #f2c96b;
-  font-size: 18rpx;
-}
-
-.poster-spark--three {
-  top: 92rpx;
-  left: 96rpx;
-  font-size: 42rpx;
-}
-
-.poster-center {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  padding-top: 52rpx;
-}
-
-.poster-title {
-  display: flex;
-  align-items: baseline;
-  letter-spacing: 2rpx;
-}
-
-.poster-title__accent,
-.poster-title__main {
-  font-size: 52rpx;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.poster-title__accent {
-  margin-right: 14rpx;
-  color: #f5a623;
-  text-shadow: 0 5rpx 12rpx rgba(245, 166, 35, 0.16);
-}
-
-.poster-title__main {
-  color: #333333;
-}
-
-.poster-tag {
-  margin-top: 16rpx;
-  padding: 6rpx 20rpx;
-  border-radius: 24rpx;
-  color: #ffffff;
-  font-size: 24rpx;
-  font-weight: 600;
-  line-height: 1.5;
-  background: linear-gradient(90deg, #ffad6e 0%, #f27a3a 100%);
-  box-shadow: 0 8rpx 18rpx rgba(242, 122, 58, 0.2);
-}
-
-.poster-footer {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  height: 72rpx;
-  overflow: hidden;
-  background:
-    repeating-linear-gradient(135deg, rgba(113, 105, 100, 0.035) 0, rgba(113, 105, 100, 0.035) 4rpx, transparent 4rpx, transparent 10rpx),
-    rgba(247, 246, 245, 0.95);
-}
-
-.poster-ribbon {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 176rpx;
-  height: 72rpx;
-  flex: none;
-  flex-direction: column;
-  box-sizing: border-box;
-  padding-right: 12rpx;
-  color: #ffffff;
-  font-size: 22rpx;
-  font-weight: 700;
-  line-height: 27rpx;
-  background: linear-gradient(135deg, #ff9f5d, #ec7438);
-}
-
-.poster-ribbon::after {
-  position: absolute;
-  top: 50%;
-  right: -14rpx;
-  width: 28rpx;
-  height: 28rpx;
-  background: #f7f6f5;
-  content: '';
-  transform: translateY(-50%) rotate(45deg);
-}
-
-.poster-footer__copy {
-  margin-left: 30rpx;
-  color: #333333;
-  font-size: 26rpx;
-  font-weight: 600;
-  line-height: 1.4;
+  background: #f4f1f6;
 }
 
 .live-info {
@@ -375,19 +218,37 @@ page {
 }
 
 .action-area {
-  display: flex;
-  flex-direction: column;
+  width: 100%;
   padding: 50rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.action-button-wrap {
+  position: relative;
+  width: 100%;
+  height: 88rpx;
+}
+
+.action-button-wrap--reserve {
+  margin-bottom: 30rpx;
 }
 
 .action-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 610rpx;
-  height: 88rpx;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   border: 0;
   border-radius: 44rpx;
   color: #ffffff;
@@ -397,12 +258,15 @@ page {
   transition: opacity 160ms ease, transform 160ms ease;
 }
 
+.action-button-wrap .action-button {
+  width: 100% !important;
+}
+
 .action-button::after {
   border: 0;
 }
 
 .action-button--reserve {
-  margin-bottom: 30rpx;
   background: #9b51e0;
   box-shadow: 0 12rpx 26rpx rgba(155, 81, 224, 0.23);
 }
