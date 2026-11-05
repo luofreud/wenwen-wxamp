@@ -85,15 +85,21 @@
       >
         <view class="archive-copy">
           <view class="archive-heading">
-            <text class="archive-name">{{item.name}}</text>
-            <text class="archive-relation">{{item.genderLabel}}</text>
-            <view class="zodiac-tag zodiac-tag--{{item.zodiacTone}}">
-              <text class="zodiac-symbol">{{item.zodiacSymbol}}</text>
+            <view class="archive-identity">
+              <text class="archive-name">{{item.name}}</text>
+              <text class="archive-relation">（{{item.remark || item.genderLabel}}）</text>
+            </view>
+            <view class="zodiac-tag {{item.zodiacName === '白羊座' || item.zodiacName === '射手座' ? 'zodiac-tag--red' : item.zodiacName === '金牛座' || item.zodiacName === '狮子座' ? 'zodiac-tag--orange' : item.zodiacName === '双子座' || item.zodiacName === '处女座' ? 'zodiac-tag--green' : item.zodiacName === '天秤座' || item.zodiacName === '天蝎座' || item.zodiacName === '双鱼座' ? 'zodiac-tag--purple' : 'zodiac-tag--blue'}}">
+              <image
+                class="zodiac-icon"
+                src="{{item.zodiacIcon}}"
+                mode="aspectFit"
+                aria-hidden="true"
+              />
               <text>{{item.zodiacName}}</text>
             </view>
           </view>
           <text class="archive-date">{{item.birthTimeText}}</text>
-          <text class="archive-place">{{item.birthPlace}} · UTC{{item.timezone >= 0 ? '+' : ''}}{{item.timezone}}</text>
         </view>
         <view
           class="edit-action"
@@ -103,7 +109,12 @@
           role="button"
           aria-label="编辑{{item.name}}档案"
         >
-          <view class="edit-icon"></view>
+          <image
+            class="edit-icon"
+            src="/assets/icons/delete.png"
+            mode="aspectFit"
+            aria-hidden="true"
+          />
         </view>
       </view>
     </mp-slideview>

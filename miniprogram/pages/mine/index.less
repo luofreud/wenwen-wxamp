@@ -114,7 +114,7 @@ page {
   min-width: 0;
   margin-left: 20rpx;
   box-sizing: border-box;
-  padding: 8rpx 0;
+  padding: 3rpx 0;
 }
 
 .profile-name {
@@ -139,24 +139,55 @@ page {
 .profile-tip {
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
-  width: 152rpx;
-  height: 42rpx;
-  gap: 8rpx;
+  align-self: flex-start;
+  height: 48rpx;
+  padding: 0 20rpx;
+  flex: none;
   box-sizing: border-box;
-  background: linear-gradient(136.48deg, rgba(230, 227, 255, 1) 0%, rgba(234, 232, 255, 1) 4.86%, rgba(199, 218, 255, 1) 100%);
-  border-radius: 6rpx;
+  border-radius: 18rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 48rpx;
+  white-space: nowrap;
+}
+
+.profile-tip--blue {
+  color: #327cf2;
+  background: #eaf3ff;
+}
+
+.profile-tip--red {
+  color: #e35d5b;
+  background: #ffeceb;
+}
+
+.profile-tip--orange {
+  color: #e5902e;
+  background: #fff2e3;
+}
+
+.profile-tip--green {
+  color: #36a66a;
+  background: #eaf8f0;
+}
+
+.profile-tip--purple {
+  color: #8a6de9;
+  background: #f1eeff;
 }
 
 .profile-zodiac-icon {
-  height: 26rpx;
-  width: 26rpx;
+  display: block;
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
   flex: none;
 }
 
 .profile-zodiac-name {
   font-size: 24rpx;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 48rpx;
 }
 
 .profile-sync,
@@ -343,47 +374,22 @@ page {
 .milestone-card {
   margin: 24rpx 8rpx 22rpx;
   padding: 18rpx 20rpx;
-  border: 1rpx solid rgba(255, 206, 0, 0.28);
+  border: 1rpx solid rgba(210, 184, 107, 0.14);
   border-radius: 16rpx;
-  box-shadow: 0 6rpx 16rpx rgba(198, 155, 0, 0.08);
-  background: linear-gradient(135deg, rgba(255, 254, 246, 0.96), rgba(255, 248, 218, 0.96));
+  box-shadow: 0 6rpx 16rpx rgba(173, 148, 79, 0.04);
+  background: linear-gradient(135deg, rgba(255, 254, 248, 0.9), rgba(255, 249, 229, 0.82));
 }
 
 .milestone-card--skeleton {
-  background: rgba(255, 252, 235, 0.92);
-}
-
-.milestone-skeleton-copy {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.milestone-skeleton-text,
-.milestone-skeleton-track {
+  width: auto;
+  height: 90rpx;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-color: transparent;
   background: linear-gradient(90deg, #f0edf3 0%, #faf9fb 50%, #f0edf3 100%);
   background-size: 200% 100%;
   animation: checkin-shimmer 1.35s ease-in-out infinite;
-}
-
-.milestone-skeleton-text {
-  height: 30rpx;
-  border-radius: 8rpx;
-}
-
-.milestone-skeleton-text--title {
-  width: 240rpx;
-}
-
-.milestone-skeleton-text--reward {
-  width: 190rpx;
-}
-
-.milestone-skeleton-track {
-  width: 100%;
-  height: 8rpx;
-  margin-top: 14rpx;
-  border-radius: 4rpx;
 }
 
 .milestone-copy {
@@ -393,15 +399,15 @@ page {
 }
 
 .milestone-title {
-  color: #38513f;
+  color: #858a86;
   font-size: 22rpx;
   line-height: 1.4;
 }
 
 .milestone-reward {
-  color: #b67b00;
+  color: #b39a61;
   font-size: 22rpx;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -410,13 +416,13 @@ page {
   margin-top: 14rpx;
   overflow: hidden;
   border-radius: 4rpx;
-  background: rgba(255, 213, 48, 0.24);
+  background: rgba(210, 184, 107, 0.14);
 }
 
 .milestone-fill {
   height: 100%;
   border-radius: 4rpx;
-  background: linear-gradient(90deg, #ffed70 0%, #ffce00 100%);
+  background: linear-gradient(90deg, #f1e4b5 0%, #e7ca7d 100%);
   transition: width 240ms ease;
 }
 
@@ -442,30 +448,17 @@ page {
   box-shadow: -2px -2px 2px rgba(0, 0, 0, 0.06), 2px 2px 2px rgba(255, 255, 255, 1);
 }
 
-.day-card--today {
-  border-color: #ffe183;
-  background: linear-gradient(180deg, #fffae9 0%, #fff7da 100%);
-}
-
-.day-card--today::before {
-  position: absolute;
-  top: -1rpx;
-  left: 50%;
-  width: 42rpx;
-  height: 5rpx;
-  border-radius: 0 0 6rpx 6rpx;
-  background: #f5c526;
-  content: '';
-  transform: translateX(-50%);
-}
-
 .day-card--checked {
   border: 1px solid rgba(252, 252, 252, 1);
   background: rgba(255, 255, 255, 1);
 }
 
-.day-card--checked::before {
-  display: none;
+.day-card--today {
+  border-color: rgba(255, 239, 190, 0.18);
+  background: rgba(255, 239, 190, 0.32);
+  box-shadow:
+    -2px -2px 2px rgba(222, 198, 132, 0.08),
+    2px 2px 2px rgba(255, 239, 190, 0.16);
 }
 
 .day-checked-icon {
@@ -676,6 +669,15 @@ page {
   min-width: 0;
   box-sizing: border-box;
   transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.feature-card--skeleton {
+  aspect-ratio: 340 / 138;
+  overflow: hidden;
+  border-radius: 28rpx;
+  background: linear-gradient(90deg, #f0edf3 0%, #faf9fb 50%, #f0edf3 100%);
+  background-size: 200% 100%;
+  animation: checkin-shimmer 1.35s ease-in-out infinite;
 }
 
 .feature-card__background {

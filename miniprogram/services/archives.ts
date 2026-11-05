@@ -10,13 +10,13 @@ interface Archive {
   gender: Gender
   birth_time: string
   birth_place: string
-  birth_longitude: number | null
-  birth_latitude: number | null
+  birth_longitude: number
+  birth_latitude: number
   current_place: string
-  current_longitude: number | null
-  current_latitude: number | null
+  current_longitude: number
+  current_latitude: number
   timezone: number
-  daylight_saving: DaylightSaving
+  daylight_saving: number | null
   remark: string
   created_at: string
   updated_at: string
@@ -27,11 +27,11 @@ interface CreateArchiveParams {
   gender: Gender
   birth_time: string
   birth_place: string
-  birth_longitude?: number
-  birth_latitude?: number
+  birth_longitude: number
+  birth_latitude: number
   current_place: string
-  current_longitude?: number
-  current_latitude?: number
+  current_longitude: number
+  current_latitude: number
   timezone: number
   daylight_saving: DaylightSaving
   remark?: string

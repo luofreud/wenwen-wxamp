@@ -14,6 +14,14 @@
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于选择档案中的出生地点和现居地并获取经纬度"
+    }
+  },
+  "requiredPrivateInfos": [
+    "chooseLocation"
+  ],
   "tabBar": {
     "borderStyle": "black",
     "list": [

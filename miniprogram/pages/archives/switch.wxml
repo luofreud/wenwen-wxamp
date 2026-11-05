@@ -21,12 +21,6 @@
     </view>
   </view>
 
-  <view class="page-intro">
-    <text class="intro-kicker">CELESTIAL PROFILE</text>
-    <text class="intro-title">选择本次使用的档案</text>
-    <text class="intro-copy">切换后，星盘与相关解读将使用该档案的出生信息。</text>
-  </view>
-
   <view wx:if="{{isLoading}}" class="archive-list">
     <view wx:for="{{[1, 2, 3]}}" wx:key="*this" class="archive-card archive-card--skeleton">
       <view class="skeleton-line skeleton-line--title"></view>
@@ -59,16 +53,23 @@
       role="button"
       aria-label="{{item.isSelected ? '当前档案' : '切换到'}}{{item.name}}"
     >
-      <view class="archive-mark" aria-hidden="true">
-        <text>{{item.initial}}</text>
-      </view>
       <view class="archive-copy">
         <view class="archive-heading">
-          <text class="archive-name">{{item.name}}</text>
-          <text class="gender-tag">{{item.genderLabel}}</text>
+          <view class="archive-identity">
+            <text class="archive-name">{{item.name}}</text>
+            <text class="archive-relation">（{{item.remark || item.genderLabel}}）</text>
+          </view>
+          <view class="zodiac-tag {{item.zodiacTagClass}}">
+            <image
+              class="zodiac-icon"
+              src="{{item.zodiacIcon}}"
+              mode="aspectFit"
+              aria-hidden="true"
+            />
+            <text>{{item.zodiacName}}</text>
+          </view>
         </view>
-        <text class="archive-time">{{item.birthTimeText}}</text>
-        <text class="archive-place">{{item.birth_place}}</text>
+        <text class="archive-date">{{item.birthTimeText}}</text>
       </view>
       <view class="selection-control" aria-hidden="true">
         <view wx:if="{{item.isSelected}}" class="selection-check"></view>

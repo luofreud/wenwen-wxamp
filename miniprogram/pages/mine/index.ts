@@ -37,10 +37,10 @@ interface NextMilestoneView extends RewardMilestone {
 }
 
 interface ProfileZodiac {
-  color: string
   end: number
   icon: string
   name: string
+  tone: 'blue' | 'green' | 'orange' | 'purple' | 'red'
 }
 
 interface CycleDayTapEvent {
@@ -56,19 +56,19 @@ const hasText = (value: string | null): boolean => {
 }
 
 const PROFILE_ZODIACS: ProfileZodiac[] = [
-  { end: 120, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', color: '#75624B' },
-  { end: 219, name: '水瓶座', icon: '/assets/constellation/aquarius.svg', color: '#2787B7' },
-  { end: 320, name: '双鱼座', icon: '/assets/constellation/pisces.svg', color: '#5B68C8' },
-  { end: 420, name: '白羊座', icon: '/assets/constellation/aries.svg', color: '#E35D5B' },
-  { end: 521, name: '金牛座', icon: '/assets/constellation/taurus.svg', color: '#B4872C' },
-  { end: 622, name: '双子座', icon: '/assets/constellation/gemini.svg', color: '#35A169' },
-  { end: 723, name: '巨蟹座', icon: '/assets/constellation/cancer.svg', color: '#3778D4' },
-  { end: 823, name: '狮子座', icon: '/assets/constellation/leo.svg', color: '#E47631' },
-  { end: 923, name: '处女座', icon: '/assets/constellation/virgo.svg', color: '#78983B' },
-  { end: 1024, name: '天秤座', icon: '/assets/constellation/libra.svg', color: '#8B65CF' },
-  { end: 1123, name: '天蝎座', icon: '/assets/constellation/scorpio.svg', color: '#774AA5' },
-  { end: 1222, name: '射手座', icon: '/assets/constellation/sagittarius.svg', color: '#D65B7A' },
-  { end: 1231, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', color: '#75624B' },
+  { end: 120, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', tone: 'blue' },
+  { end: 219, name: '水瓶座', icon: '/assets/constellation/aquarius.svg', tone: 'blue' },
+  { end: 320, name: '双鱼座', icon: '/assets/constellation/pisces.svg', tone: 'purple' },
+  { end: 420, name: '白羊座', icon: '/assets/constellation/aries.svg', tone: 'red' },
+  { end: 521, name: '金牛座', icon: '/assets/constellation/taurus.svg', tone: 'orange' },
+  { end: 622, name: '双子座', icon: '/assets/constellation/gemini.svg', tone: 'green' },
+  { end: 723, name: '巨蟹座', icon: '/assets/constellation/cancer.svg', tone: 'blue' },
+  { end: 823, name: '狮子座', icon: '/assets/constellation/leo.svg', tone: 'orange' },
+  { end: 923, name: '处女座', icon: '/assets/constellation/virgo.svg', tone: 'green' },
+  { end: 1024, name: '天秤座', icon: '/assets/constellation/libra.svg', tone: 'purple' },
+  { end: 1123, name: '天蝎座', icon: '/assets/constellation/scorpio.svg', tone: 'purple' },
+  { end: 1222, name: '射手座', icon: '/assets/constellation/sagittarius.svg', tone: 'red' },
+  { end: 1231, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', tone: 'blue' },
 ]
 
 const getProfileZodiac = (birthDate: string | null): ProfileZodiac | null => {
@@ -175,8 +175,8 @@ Page({
     isProfileEmpty: false,
     needsWechatInfo: false,
     profileZodiac: '',
-    profileZodiacColor: '',
     profileZodiacIcon: '',
+    profileZodiacTone: 'blue' as ProfileZodiac['tone'],
     checkInStatus: null as CheckInStatus | null,
     checkInDays: [] as CheckInDayView[],
     nextMilestone: null as NextMilestoneView | null,
@@ -236,8 +236,8 @@ Page({
       isProfileEmpty: !hasAvatar && !hasNickname && !hasBirthDate,
       needsWechatInfo: !hasAvatar || !hasNickname,
       profileZodiac: zodiac?.name ?? '',
-      profileZodiacColor: zodiac?.color ?? '',
       profileZodiacIcon: zodiac?.icon ?? '',
+      profileZodiacTone: zodiac?.tone ?? 'blue',
     })
   },
 

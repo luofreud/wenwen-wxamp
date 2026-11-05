@@ -68,8 +68,7 @@
       <text class="profile-name">{{profile.nickname || '星友'}}</text>
       <view
         wx:if="{{profileZodiac}}"
-        class="profile-tip"
-        style="color: {{profileZodiacColor}};"
+        class="profile-tip profile-tip--{{profileZodiacTone}}"
       >
         <image
           class="profile-zodiac-icon"
@@ -193,13 +192,7 @@
     </view>
   </view>
 
-  <view wx:if="{{isCheckInLoading}}" class="milestone-card milestone-card--skeleton" aria-hidden="true">
-    <view class="milestone-skeleton-copy">
-      <view class="milestone-skeleton-text milestone-skeleton-text--title"></view>
-      <view class="milestone-skeleton-text milestone-skeleton-text--reward"></view>
-    </view>
-    <view class="milestone-skeleton-track"></view>
-  </view>
+  <view wx:if="{{isCheckInLoading}}" class="milestone-card milestone-card--skeleton" aria-hidden="true"></view>
 
   <view wx:elif="{{nextMilestone}}" class="milestone-card">
     <view class="milestone-copy">
@@ -212,55 +205,66 @@
   </view>
 
   <view class="feature-grid">
-    <navigator
-      class="feature-card feature-card--profile"
-      url="/pages/archives/index"
-      hover-class="feature-card--pressed"
-    >
-      <image
-        class="feature-card__background"
-        src="/assets/images/archive-background-01.png"
-        mode="widthFix"
+    <block wx:if="{{isProfileLoading || isCheckInLoading}}">
+      <view
+        wx:for="{{[1, 2]}}"
+        wx:key="*this"
+        class="feature-card feature-card--skeleton"
         aria-hidden="true"
-      />
-      <view class="feature-card__content">
-        <image
-          class="feature-icon"
-          src="/assets/images/archive-icon-01.png"
-          mode="aspectFit"
-          aria-hidden="true"
-        />
-        <view class="feature-copy">
-          <text class="feature-title">个人档案</text>
-          <text class="feature-subtitle">完善出生信息</text>
-        </view>
-      </view>
-    </navigator>
+      ></view>
+    </block>
 
-    <navigator
-      class="feature-card feature-card--report"
-      url="/pages/reports/list"
-      hover-class="feature-card--pressed"
-    >
-      <image
-        class="feature-card__background"
-        src="/assets/images/archive-background-02.png"
-        mode="widthFix"
-        aria-hidden="true"
-      />
-      <view class="feature-card__content">
+    <block wx:else>
+      <navigator
+        class="feature-card feature-card--profile"
+        url="/pages/archives/index"
+        hover-class="feature-card--pressed"
+      >
         <image
-          class="feature-icon"
-          src="/assets/images/archive-icon-02.png"
-          mode="aspectFit"
+          class="feature-card__background"
+          src="/assets/images/archive-background-01.png"
+          mode="widthFix"
           aria-hidden="true"
         />
-        <view class="feature-copy">
-          <text class="feature-title">我的报告</text>
-          <text class="feature-subtitle">查看星座解读</text>
+        <view class="feature-card__content">
+          <image
+            class="feature-icon"
+            src="/assets/images/archive-icon-01.png"
+            mode="aspectFit"
+            aria-hidden="true"
+          />
+          <view class="feature-copy">
+            <text class="feature-title">个人档案</text>
+            <text class="feature-subtitle">完善出生信息</text>
+          </view>
         </view>
-      </view>
-    </navigator>
+      </navigator>
+
+      <navigator
+        class="feature-card feature-card--report"
+        url="/pages/reports/list"
+        hover-class="feature-card--pressed"
+      >
+        <image
+          class="feature-card__background"
+          src="/assets/images/archive-background-02.png"
+          mode="widthFix"
+          aria-hidden="true"
+        />
+        <view class="feature-card__content">
+          <image
+            class="feature-icon"
+            src="/assets/images/archive-icon-02.png"
+            mode="aspectFit"
+            aria-hidden="true"
+          />
+          <view class="feature-copy">
+            <text class="feature-title">我的报告</text>
+            <text class="feature-subtitle">查看星座解读</text>
+          </view>
+        </view>
+      </navigator>
+    </block>
   </view>
   </view>
 </view>

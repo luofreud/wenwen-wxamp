@@ -1,15 +1,13 @@
-import {
-  createArchive,
-  updateArchive,
-} from '../../services/index'
+import { createArchive, updateArchive } from '../../services/index'
 import type {
   Archive,
   CreateArchiveParams,
   DaylightSaving,
+  DictionaryItem,
   Gender,
   UpdateArchiveParams,
 } from '../../services/index'
-import { archiveStore } from '../../stores/index'
+import { archiveStore, dictionaryStore } from '../../stores/index'
 
 interface TextInputEvent {
   detail: {
@@ -20,12 +18,6 @@ interface TextInputEvent {
 interface PickerChangeEvent {
   detail: {
     value: string
-  }
-}
-
-interface RegionChangeEvent {
-  detail: {
-    value: string[]
   }
 }
 
@@ -44,6 +36,7 @@ interface GenderTapEvent {
 }
 
 interface TimezoneOption {
+  id: number
   label: string
   value: number
 }
@@ -54,10 +47,17 @@ interface ArchiveFormSnapshot {
   gender: Gender
   birth_time: string
   birth_place: string
+  birth_longitude: number
+  birth_latitude: number
   current_place: string
+  current_longitude: number
+  current_latitude: number
   timezone: number
   daylight_saving: DaylightSaving
 }
+
+const NAME_MAX_LENGTH = 20
+const REMARK_MAX_LENGTH = 50
 
 const getDateText = (date: Date): string => {
   const year = date.getFullYear()
@@ -66,21 +66,23 @@ const getDateText = (date: Date): string => {
   return `${year}-${month}-${day}`
 }
 
-const TIMEZONE_OPTIONS: TimezoneOption[] = Array.from(
-  { length: 27 },
-  (_, index) => {
-    const value = index - 12
-    const offset = value >= 0 ? `+${value}` : String(value)
-    return {
-      label: value === 8 ? 'UTC+8 中国北京时间' : `UTC${offset}`,
-      value,
-    }
-  },
-)
+const getTimezoneIndex = (
+  options: TimezoneOption[],
+  timezone: number,
+): number => {
+  const index = options.findIndex(({ value }) => value === timezone)
+  return index >= 0 ? index : 0
+}
 
-const getTimezoneIndex = (timezone: number): number => {
-  const index = TIMEZONE_OPTIONS.findIndex(({ value }) => value === timezone)
-  return index >= 0 ? index : 20
+const toTimezoneOptions = (items: DictionaryItem[]): TimezoneOption[] => {
+  return items
+    .filter(({ status, value }) => status === 1 && Number.isFinite(Number(value)))
+    .sort((left, right) => left.sort - right.sort)
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      value: Number(item.value),
+    }))
 }
 
 const getBirthParts = (birthTime: string): { date: string; time: string } => {
@@ -107,15 +109,24 @@ Page({
     loadError: '',
     name: '',
     remark: '',
-    gender: 0 as Gender,
+    nameMaxLength: NAME_MAX_LENGTH,
+    remarkMaxLength: REMARK_MAX_LENGTH,
+    gender: 2 as Gender,
     birthDate: '',
     birthTime: '',
-    birthPlace: [] as string[],
     birthPlaceText: '',
-    currentPlace: [] as string[],
+    birthLongitude: null as number | null,
+    birthLatitude: null as number | null,
     currentPlaceText: '',
-    timezoneOptions: TIMEZONE_OPTIONS,
-    timezoneIndex: 20,
+    currentLongitude: null as number | null,
+    currentLatitude: null as number | null,
+    choosingLocation: '' as 'birth' | 'current' | '',
+    timezoneOptions: [] as TimezoneOption[],
+    timezoneIndex: 0,
+    timezoneValue: null as number | null,
+    timezoneLabel: '加载中…',
+    isTimezoneLoading: false,
+    timezoneError: '',
     daylightSaving: false,
     dateStart: '1900-01-01',
     dateEnd: getDateText(new Date()),
@@ -124,6 +135,7 @@ Page({
 
   onLoad(options: Record<string, string | undefined>) {
     this.initNavigation()
+    void this.loadTimezoneOptions()
 
     const archiveId = Number(options.id)
     if (Number.isFinite(archiveId) && archiveId > 0) {
@@ -168,6 +180,47 @@ Page({
     }
   },
 
+  async loadTimezoneOptions(forceRefresh = false): Promise<void> {
+    if (this.data.isTimezoneLoading) return
+
+    this.setData({
+      isTimezoneLoading: true,
+      timezoneError: '',
+      timezoneLabel: '加载中…',
+    })
+
+    try {
+      const items = await dictionaryStore.getItems('timezone', forceRefresh)
+      const timezoneOptions = toTimezoneOptions(items)
+      if (timezoneOptions.length === 0) {
+        throw new Error('暂无可用时区')
+      }
+
+      const defaultTimezone = timezoneOptions.find(({ value }) => value === 8)
+        ?? timezoneOptions[0]
+      const timezoneValue = this.data.timezoneValue ?? defaultTimezone.value
+      const timezoneIndex = getTimezoneIndex(timezoneOptions, timezoneValue)
+      const selectedOption = timezoneOptions[timezoneIndex]
+
+      this.setData({
+        timezoneOptions,
+        timezoneIndex,
+        timezoneValue: selectedOption.value,
+        timezoneLabel: selectedOption.label,
+      })
+    } catch (error) {
+      const timezoneError = error instanceof Error
+        ? error.message
+        : '获取时区失败，请稍后重试'
+      this.setData({
+        timezoneError,
+        timezoneLabel: '加载失败，点击重试',
+      })
+    } finally {
+      this.setData({ isTimezoneLoading: false })
+    }
+  },
+
   async loadArchive(archiveId: number, forceRefresh = false): Promise<void> {
     this.setData({ isLoading: true, loadError: '' })
 
@@ -196,15 +249,26 @@ Page({
 
   fillArchive(archive: Archive) {
     const birth = getBirthParts(archive.birth_time)
+    const daylightSaving: DaylightSaving = archive.daylight_saving === 1 ? 1 : 0
+    const timezoneIndex = getTimezoneIndex(
+      this.data.timezoneOptions,
+      archive.timezone,
+    )
+    const timezoneOption = this.data.timezoneOptions[timezoneIndex]
+    const timezoneValue = timezoneOption?.value ?? archive.timezone
     const initialForm: ArchiveFormSnapshot = {
       name: archive.name,
       remark: archive.remark,
       gender: archive.gender,
       birth_time: buildBirthTime(birth.date, birth.time),
       birth_place: archive.birth_place,
+      birth_longitude: archive.birth_longitude,
+      birth_latitude: archive.birth_latitude,
       current_place: archive.current_place,
+      current_longitude: archive.current_longitude,
+      current_latitude: archive.current_latitude,
       timezone: archive.timezone,
-      daylight_saving: archive.daylight_saving,
+      daylight_saving: daylightSaving,
     }
 
     this.setData({
@@ -214,9 +278,16 @@ Page({
       birthDate: birth.date,
       birthTime: birth.time,
       birthPlaceText: archive.birth_place,
+      birthLongitude: archive.birth_longitude,
+      birthLatitude: archive.birth_latitude,
       currentPlaceText: archive.current_place,
-      timezoneIndex: getTimezoneIndex(archive.timezone),
-      daylightSaving: archive.daylight_saving === 1,
+      currentLongitude: archive.current_longitude,
+      currentLatitude: archive.current_latitude,
+      timezoneIndex,
+      timezoneValue,
+      timezoneLabel: timezoneOption?.label
+        ?? (this.data.timezoneError ? '加载失败，点击重试' : '加载中…'),
+      daylightSaving: daylightSaving === 1,
       initialForm,
     })
   },
@@ -228,11 +299,11 @@ Page({
   },
 
   handleNameInput(event: TextInputEvent) {
-    this.setData({ name: event.detail.value })
+    this.setData({ name: event.detail.value.slice(0, NAME_MAX_LENGTH) })
   },
 
   handleRemarkInput(event: TextInputEvent) {
-    this.setData({ remark: event.detail.value })
+    this.setData({ remark: event.detail.value.slice(0, REMARK_MAX_LENGTH) })
   },
 
   selectGender(event: GenderTapEvent) {
@@ -249,22 +320,81 @@ Page({
     this.setData({ birthTime: event.detail.value })
   },
 
-  handleBirthPlaceChange(event: RegionChangeEvent) {
-    this.setData({
-      birthPlace: event.detail.value,
-      birthPlaceText: event.detail.value.join(' '),
-    })
+  handleBirthPlaceTap() {
+    this.chooseArchiveLocation('birth')
   },
 
-  handleCurrentPlaceChange(event: RegionChangeEvent) {
-    this.setData({
-      currentPlace: event.detail.value,
-      currentPlaceText: event.detail.value.join(' '),
-    })
+  handleCurrentPlaceTap() {
+    this.chooseArchiveLocation('current')
+  },
+
+  chooseArchiveLocation(locationType: 'birth' | 'current') {
+    if (this.data.choosingLocation) return
+
+    const isBirth = locationType === 'birth'
+    const latitude = isBirth
+      ? this.data.birthLatitude
+      : this.data.currentLatitude
+    const longitude = isBirth
+      ? this.data.birthLongitude
+      : this.data.currentLongitude
+    const options: WechatMiniprogram.ChooseLocationOption = {
+      success: (result) => {
+        const placeText = result.address.trim() || result.name.trim()
+        if (!placeText) {
+          wx.showToast({ title: '未获取到地点信息，请重新选择', icon: 'none' })
+          return
+        }
+
+        if (isBirth) {
+          this.setData({
+            birthPlaceText: placeText,
+            birthLongitude: result.longitude,
+            birthLatitude: result.latitude,
+          })
+          return
+        }
+
+        this.setData({
+          currentPlaceText: placeText,
+          currentLongitude: result.longitude,
+          currentLatitude: result.latitude,
+        })
+      },
+      fail: (error) => {
+        if (error.errMsg.includes('cancel')) return
+        wx.showToast({ title: '打开地图失败，请稍后重试', icon: 'none' })
+      },
+      complete: () => {
+        this.setData({ choosingLocation: '' })
+      },
+    }
+
+    if (latitude !== null && longitude !== null) {
+      options.latitude = latitude
+      options.longitude = longitude
+    }
+
+    this.setData({ choosingLocation: locationType })
+    wx.chooseLocation(options)
   },
 
   handleTimezoneChange(event: PickerChangeEvent) {
-    this.setData({ timezoneIndex: Number(event.detail.value) })
+    const timezoneIndex = Number(event.detail.value)
+    const timezoneOption = this.data.timezoneOptions[timezoneIndex]
+    if (!timezoneOption) return
+
+    this.setData({
+      timezoneIndex,
+      timezoneValue: timezoneOption.value,
+      timezoneLabel: timezoneOption.label,
+    })
+  },
+
+  handleTimezoneTap() {
+    if (this.data.timezoneError && !this.data.isTimezoneLoading) {
+      void this.loadTimezoneOptions(true)
+    }
   },
 
   handleDaylightSavingChange(event: SwitchChangeEvent) {
@@ -274,10 +404,22 @@ Page({
   getFormSnapshot(): ArchiveFormSnapshot | null {
     const name = this.data.name.trim()
     const birthPlace = this.data.birthPlaceText.trim()
+    const birthLongitude = this.data.birthLongitude
+    const birthLatitude = this.data.birthLatitude
     const currentPlace = this.data.currentPlaceText.trim()
+    const currentLongitude = this.data.currentLongitude
+    const currentLatitude = this.data.currentLatitude
 
     if (!name) {
       wx.showToast({ title: '请填写姓名', icon: 'none' })
+      return null
+    }
+    if (name.length > NAME_MAX_LENGTH) {
+      wx.showToast({ title: `姓名不超过${NAME_MAX_LENGTH}字`, icon: 'none' })
+      return null
+    }
+    if (this.data.gender !== 1 && this.data.gender !== 2) {
+      wx.showToast({ title: '请选择性别', icon: 'none' })
       return null
     }
     if (!this.data.birthDate || !this.data.birthTime) {
@@ -288,24 +430,64 @@ Page({
       wx.showToast({ title: '请选择出生地点', icon: 'none' })
       return null
     }
+    if (birthLongitude === null || birthLatitude === null) {
+      wx.showToast({ title: '请在地图中选择出生地点', icon: 'none' })
+      return null
+    }
+    if (
+      !Number.isFinite(birthLongitude)
+      || birthLongitude < -180
+      || birthLongitude > 180
+      || !Number.isFinite(birthLatitude)
+      || birthLatitude < -90
+      || birthLatitude > 90
+    ) {
+      wx.showToast({ title: '出生地点坐标无效', icon: 'none' })
+      return null
+    }
     if (!currentPlace) {
       wx.showToast({ title: '请选择现居地', icon: 'none' })
       return null
     }
+    if (currentLongitude === null || currentLatitude === null) {
+      wx.showToast({ title: '请在地图中选择现居地', icon: 'none' })
+      return null
+    }
+    if (
+      !Number.isFinite(currentLongitude)
+      || currentLongitude < -180
+      || currentLongitude > 180
+      || !Number.isFinite(currentLatitude)
+      || currentLatitude < -90
+      || currentLatitude > 90
+    ) {
+      wx.showToast({ title: '现居地坐标无效', icon: 'none' })
+      return null
+    }
 
-    const timezone = this.data.timezoneOptions[this.data.timezoneIndex]?.value
-    if (timezone === undefined) {
+    const remark = this.data.remark.trim()
+    if (remark.length > REMARK_MAX_LENGTH) {
+      wx.showToast({ title: `备注不超过${REMARK_MAX_LENGTH}字`, icon: 'none' })
+      return null
+    }
+
+    const timezone = this.data.timezoneValue
+    if (timezone === null) {
       wx.showToast({ title: '请选择时区', icon: 'none' })
       return null
     }
 
     return {
       name,
-      remark: this.data.remark.trim(),
+      remark,
       gender: this.data.gender,
       birth_time: buildBirthTime(this.data.birthDate, this.data.birthTime),
       birth_place: birthPlace,
+      birth_longitude: birthLongitude,
+      birth_latitude: birthLatitude,
       current_place: currentPlace,
+      current_longitude: currentLongitude,
+      current_latitude: currentLatitude,
       timezone,
       daylight_saving: this.data.daylightSaving ? 1 : 0,
     }
@@ -322,7 +504,11 @@ Page({
       'gender',
       'birth_time',
       'birth_place',
+      'birth_longitude',
+      'birth_latitude',
       'current_place',
+      'current_longitude',
+      'current_latitude',
       'timezone',
       'daylight_saving',
     ]

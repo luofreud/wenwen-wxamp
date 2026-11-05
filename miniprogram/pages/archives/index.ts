@@ -6,8 +6,8 @@ interface ArchiveListItem extends Archive {
   birthTimeText: string
   genderLabel: string
   slideButtons: ArchiveSlideButton[]
+  zodiacIcon: string
   zodiacName: string
-  zodiacSymbol: string
   zodiacTone: 'blue' | 'orange'
 }
 
@@ -32,25 +32,25 @@ interface ArchiveSlideButtonEvent {
 }
 
 interface ZodiacInfo {
+  icon: string
   name: string
-  symbol: string
   tone: 'blue' | 'orange'
 }
 
 const ZODIAC_SIGNS: Array<ZodiacInfo & { end: number }> = [
-  { end: 120, name: '摩羯座', symbol: '♑', tone: 'blue' },
-  { end: 219, name: '水瓶座', symbol: '♒', tone: 'blue' },
-  { end: 320, name: '双鱼座', symbol: '♓', tone: 'blue' },
-  { end: 420, name: '白羊座', symbol: '♈', tone: 'orange' },
-  { end: 521, name: '金牛座', symbol: '♉', tone: 'orange' },
-  { end: 622, name: '双子座', symbol: '♊', tone: 'orange' },
-  { end: 723, name: '巨蟹座', symbol: '♋', tone: 'blue' },
-  { end: 823, name: '狮子座', symbol: '♌', tone: 'orange' },
-  { end: 923, name: '处女座', symbol: '♍', tone: 'orange' },
-  { end: 1024, name: '天秤座', symbol: '♎', tone: 'blue' },
-  { end: 1123, name: '天蝎座', symbol: '♏', tone: 'blue' },
-  { end: 1222, name: '射手座', symbol: '♐', tone: 'orange' },
-  { end: 1231, name: '摩羯座', symbol: '♑', tone: 'blue' },
+  { end: 120, icon: '/assets/constellation/capricorn.svg', name: '摩羯座', tone: 'blue' },
+  { end: 219, icon: '/assets/constellation/aquarius.svg', name: '水瓶座', tone: 'blue' },
+  { end: 320, icon: '/assets/constellation/pisces.svg', name: '双鱼座', tone: 'blue' },
+  { end: 420, icon: '/assets/constellation/aries.svg', name: '白羊座', tone: 'orange' },
+  { end: 521, icon: '/assets/constellation/taurus.svg', name: '金牛座', tone: 'orange' },
+  { end: 622, icon: '/assets/constellation/gemini.svg', name: '双子座', tone: 'orange' },
+  { end: 723, icon: '/assets/constellation/cancer.svg', name: '巨蟹座', tone: 'blue' },
+  { end: 823, icon: '/assets/constellation/leo.svg', name: '狮子座', tone: 'orange' },
+  { end: 923, icon: '/assets/constellation/virgo.svg', name: '处女座', tone: 'orange' },
+  { end: 1024, icon: '/assets/constellation/libra.svg', name: '天秤座', tone: 'blue' },
+  { end: 1123, icon: '/assets/constellation/scorpio.svg', name: '天蝎座', tone: 'blue' },
+  { end: 1222, icon: '/assets/constellation/sagittarius.svg', name: '射手座', tone: 'orange' },
+  { end: 1231, icon: '/assets/constellation/capricorn.svg', name: '摩羯座', tone: 'blue' },
 ]
 
 const getZodiac = (birthTime: string): ZodiacInfo => {
@@ -81,8 +81,8 @@ const toListItem = (archive: Archive): ArchiveListItem => {
     birthTimeText: formatBirthTime(archive.birth_time),
     genderLabel: getGenderLabel(archive.gender),
     slideButtons: [{ data: archive.id, text: '删除', type: 'warn' }],
+    zodiacIcon: zodiac.icon,
     zodiacName: zodiac.name,
-    zodiacSymbol: zodiac.symbol,
     zodiacTone: zodiac.tone,
   }
 }

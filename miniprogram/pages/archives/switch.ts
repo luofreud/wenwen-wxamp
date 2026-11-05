@@ -4,8 +4,10 @@ import { archiveStore } from '../../stores/index'
 interface ArchiveSwitchItem extends Archive {
   birthTimeText: string
   genderLabel: string
-  initial: string
   isSelected: boolean
+  zodiacIcon: string
+  zodiacName: string
+  zodiacTagClass: string
 }
 
 interface ArchiveTapEvent {
@@ -14,6 +16,37 @@ interface ArchiveTapEvent {
       id?: string | number
     }
   }
+}
+
+interface ZodiacInfo {
+  icon: string
+  name: string
+  tagClass: string
+}
+
+const ZODIAC_SIGNS: Array<ZodiacInfo & { end: number }> = [
+  { end: 120, icon: '/assets/constellation/capricorn.svg', name: '摩羯座', tagClass: 'zodiac-tag--blue' },
+  { end: 219, icon: '/assets/constellation/aquarius.svg', name: '水瓶座', tagClass: 'zodiac-tag--blue' },
+  { end: 320, icon: '/assets/constellation/pisces.svg', name: '双鱼座', tagClass: 'zodiac-tag--purple' },
+  { end: 420, icon: '/assets/constellation/aries.svg', name: '白羊座', tagClass: 'zodiac-tag--red' },
+  { end: 521, icon: '/assets/constellation/taurus.svg', name: '金牛座', tagClass: 'zodiac-tag--orange' },
+  { end: 622, icon: '/assets/constellation/gemini.svg', name: '双子座', tagClass: 'zodiac-tag--green' },
+  { end: 723, icon: '/assets/constellation/cancer.svg', name: '巨蟹座', tagClass: 'zodiac-tag--blue' },
+  { end: 823, icon: '/assets/constellation/leo.svg', name: '狮子座', tagClass: 'zodiac-tag--orange' },
+  { end: 923, icon: '/assets/constellation/virgo.svg', name: '处女座', tagClass: 'zodiac-tag--green' },
+  { end: 1024, icon: '/assets/constellation/libra.svg', name: '天秤座', tagClass: 'zodiac-tag--purple' },
+  { end: 1123, icon: '/assets/constellation/scorpio.svg', name: '天蝎座', tagClass: 'zodiac-tag--purple' },
+  { end: 1222, icon: '/assets/constellation/sagittarius.svg', name: '射手座', tagClass: 'zodiac-tag--red' },
+  { end: 1231, icon: '/assets/constellation/capricorn.svg', name: '摩羯座', tagClass: 'zodiac-tag--blue' },
+]
+
+const getZodiac = (birthTime: string): ZodiacInfo => {
+  const datePart = birthTime.slice(0, 10)
+  const month = Number(datePart.slice(5, 7))
+  const day = Number(datePart.slice(8, 10))
+  const monthDay = month * 100 + day
+
+  return ZODIAC_SIGNS.find(({ end }) => monthDay <= end) ?? ZODIAC_SIGNS[0]
 }
 
 const getGenderLabel = (gender: Gender): string => {
@@ -107,13 +140,19 @@ Page({
   syncArchivesFromStore() {
     const snapshot = archiveStore.getSnapshot()
     this.setData({
-      archives: snapshot.archives.map((archive) => ({
-        ...archive,
-        birthTimeText: formatBirthTime(archive.birth_time),
-        genderLabel: getGenderLabel(archive.gender),
-        initial: archive.name.trim().slice(0, 1) || '星',
-        isSelected: archive.id === snapshot.selectedArchiveId,
-      })),
+      archives: snapshot.archives.map((archive) => {
+        const zodiac = getZodiac(archive.birth_time)
+
+        return {
+          ...archive,
+          birthTimeText: formatBirthTime(archive.birth_time),
+          genderLabel: getGenderLabel(archive.gender),
+          isSelected: archive.id === snapshot.selectedArchiveId,
+          zodiacIcon: zodiac.icon,
+          zodiacName: zodiac.name,
+          zodiacTagClass: zodiac.tagClass,
+        }
+      }),
     })
   },
 

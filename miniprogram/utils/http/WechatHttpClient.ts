@@ -70,6 +70,19 @@ export default class WechatHttpClient {
 
   private constructor(private readonly config: WechatRequestConfig) {}
 
+  private resolveRequestUrl(url: string): string {
+    if (!url.startsWith('/api/')) {
+      return `${this.config.baseUrl}${url}`
+    }
+
+    const origin = this.config.baseUrl.match(/^https?:\/\/[^/]+/)?.[0]
+    if (!origin) {
+      throw new Error('WechatHttpClient: invalid base URL')
+    }
+
+    return `${origin}${url}`
+  }
+
   static getInstance(config?: WechatRequestConfig): WechatHttpClient {
     if (!WechatHttpClient.instance) {
       if (!config) {
@@ -207,7 +220,7 @@ export default class WechatHttpClient {
 
         wx.request({
           ...options,
-          url: `${this.config.baseUrl}${options.url}`,
+          url: this.resolveRequestUrl(options.url),
           header,
           success: (response: RequestResponse) => {
             if (this.isUnauthorized(response)) {

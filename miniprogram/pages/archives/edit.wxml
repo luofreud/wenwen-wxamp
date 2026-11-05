@@ -30,48 +30,22 @@
   </view>
 
   <block wx:else>
-    <view class="form-intro">
-      <text class="form-intro__eyebrow">CELESTIAL PROFILE</text>
-      <text class="form-intro__title">让星光找到准确的坐标</text>
-      <text class="form-intro__copy">出生日期、时间与地点会影响星盘计算，请尽量准确填写。</text>
-    </view>
-
     <view class="form-card">
       <view class="form-item">
-        <text class="field-label">姓名</text>
+        <text class="field-label field-label--required">姓名</text>
         <input
           class="field-input"
           value="{{name}}"
           placeholder="请填写"
           placeholder-class="field-placeholder"
-          maxlength="20"
+          maxlength="{{nameMaxLength}}"
           bindinput="handleNameInput"
         />
       </view>
 
       <view class="form-item">
-        <text class="field-label">备注</text>
-        <input
-          class="field-input"
-          value="{{remark}}"
-          placeholder="如：本人、伴侣（选填）"
-          placeholder-class="field-placeholder"
-          maxlength="50"
-          bindinput="handleRemarkInput"
-        />
-      </view>
-
-      <view class="form-item">
-        <text class="field-label">性别</text>
+        <text class="field-label field-label--required">性别</text>
         <view class="gender-options">
-          <view
-            class="gender-option {{gender === 0 ? 'gender-option--neutral-active' : ''}}"
-            data-gender="0"
-            bindtap="selectGender"
-            hover-class="gender-option--pressed"
-            role="radio"
-            aria-checked="{{gender === 0}}"
-          >未知</view>
           <view
             class="gender-option {{gender === 2 ? 'gender-option--female-active' : ''}}"
             data-gender="2"
@@ -79,7 +53,15 @@
             hover-class="gender-option--pressed"
             role="radio"
             aria-checked="{{gender === 2}}"
-          >♀ 女生</view>
+          >
+            <image
+              class="gender-icon"
+              src="/assets/icons/female-icon.png"
+              mode="aspectFit"
+              aria-hidden="true"
+            />
+            <text>女生</text>
+          </view>
           <view
             class="gender-option {{gender === 1 ? 'gender-option--male-active' : ''}}"
             data-gender="1"
@@ -87,99 +69,135 @@
             hover-class="gender-option--pressed"
             role="radio"
             aria-checked="{{gender === 1}}"
-          >♂ 男生</view>
+          >
+            <image
+              class="gender-icon"
+              src="/assets/icons/male-icon.png"
+              mode="aspectFit"
+              aria-hidden="true"
+            />
+            <text>男生</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <text class="field-label field-label--required">出生时间</text>
+        <view class="birth-datetime">
+          <picker
+            class="birth-picker birth-picker--date"
+            mode="date"
+            value="{{birthDate}}"
+            start="{{dateStart}}"
+            end="{{dateEnd}}"
+            bindchange="handleBirthDateChange"
+            aria-label="选择出生日期"
+          >
+            <view class="birth-picker__value">
+              <text class="selector-text {{birthDate ? 'field-value' : 'field-placeholder'}}">{{birthDate || '选择日期'}}</text>
+              <view class="selector-arrow"></view>
+            </view>
+          </picker>
+
+          <picker
+            class="birth-picker birth-picker--time"
+            mode="time"
+            value="{{birthTime}}"
+            bindchange="handleBirthTimeChange"
+            aria-label="选择出生时间"
+          >
+            <view class="birth-picker__value">
+              <text class="selector-text {{birthTime ? 'field-value' : 'field-placeholder'}}">{{birthTime || '选择时间'}}</text>
+              <view class="selector-arrow"></view>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view
+        class="form-item"
+        bindtap="handleBirthPlaceTap"
+        hover-class="form-item--pressed"
+        role="button"
+        aria-label="选择出生地点"
+      >
+        <text class="field-label field-label--required">出生地点</text>
+        <view class="field-selector">
+          <text class="selector-text {{birthPlaceText ? 'field-value' : 'field-placeholder'}}">{{choosingLocation === 'birth' ? '正在打开地图…' : (birthPlaceText || '地图选点')}}</text>
+          <view class="selector-arrow"></view>
+        </view>
+      </view>
+
+      <view
+        class="form-item"
+        bindtap="handleCurrentPlaceTap"
+        hover-class="form-item--pressed"
+        role="button"
+        aria-label="选择现居地"
+      >
+        <text class="field-label field-label--required">现居地</text>
+        <view class="field-selector">
+          <text class="selector-text {{currentPlaceText ? 'field-value' : 'field-placeholder'}}">{{choosingLocation === 'current' ? '正在打开地图…' : (currentPlaceText || '地图选点')}}</text>
+          <view class="selector-arrow"></view>
+        </view>
+      </view>
+
+      <view
+        wx:if="{{timezoneError}}"
+        class="form-item"
+        bindtap="handleTimezoneTap"
+        hover-class="form-item--pressed"
+        role="button"
+        aria-label="时区加载失败，点击重试"
+      >
+        <text class="field-label field-label--required">时区</text>
+        <view class="field-selector">
+          <text class="selector-text field-placeholder">{{timezoneLabel}}</text>
+          <view class="selector-arrow"></view>
         </view>
       </view>
 
       <picker
-        class="field-picker"
-        mode="date"
-        value="{{birthDate}}"
-        start="{{dateStart}}"
-        end="{{dateEnd}}"
-        bindchange="handleBirthDateChange"
-      >
-        <view class="form-item">
-          <text class="field-label">出生日期</text>
-          <view class="field-selector">
-            <text class="{{birthDate ? 'field-value' : 'field-placeholder'}}">{{birthDate || '请选择'}}</text>
-            <view class="selector-arrow"></view>
-          </view>
-        </view>
-      </picker>
-
-      <picker
-        class="field-picker"
-        mode="time"
-        value="{{birthTime}}"
-        bindchange="handleBirthTimeChange"
-      >
-        <view class="form-item">
-          <text class="field-label">出生时间</text>
-          <view class="field-selector">
-            <text class="{{birthTime ? 'field-value' : 'field-placeholder'}}">{{birthTime || '请选择'}}</text>
-            <view class="selector-arrow"></view>
-          </view>
-        </view>
-      </picker>
-
-      <picker
-        class="field-picker"
-        mode="region"
-        value="{{birthPlace}}"
-        bindchange="handleBirthPlaceChange"
-      >
-        <view class="form-item">
-          <text class="field-label">出生地点</text>
-          <view class="field-selector">
-            <text class="selector-text {{birthPlaceText ? 'field-value' : 'field-placeholder'}}">{{birthPlaceText || '请选择'}}</text>
-            <view class="selector-arrow"></view>
-          </view>
-        </view>
-      </picker>
-
-      <picker
-        class="field-picker"
-        mode="region"
-        value="{{currentPlace}}"
-        bindchange="handleCurrentPlaceChange"
-      >
-        <view class="form-item">
-          <text class="field-label">现居地</text>
-          <view class="field-selector">
-            <text class="selector-text {{currentPlaceText ? 'field-value' : 'field-placeholder'}}">{{currentPlaceText || '请选择'}}</text>
-            <view class="selector-arrow"></view>
-          </view>
-        </view>
-      </picker>
-
-      <picker
+        wx:else
         class="field-picker"
         mode="selector"
         range="{{timezoneOptions}}"
         range-key="label"
         value="{{timezoneIndex}}"
+        disabled="{{isTimezoneLoading || timezoneOptions.length === 0}}"
         bindchange="handleTimezoneChange"
       >
         <view class="form-item">
-          <text class="field-label">时区</text>
+          <text class="field-label field-label--required">时区</text>
           <view class="field-selector">
-            <text class="field-value">{{timezoneOptions[timezoneIndex].label}}</text>
+            <text class="selector-text {{timezoneOptions.length > 0 ? 'field-value' : 'field-placeholder'}}">{{timezoneLabel}}</text>
             <view class="selector-arrow"></view>
           </view>
         </view>
       </picker>
 
-      <view class="form-item form-item--last">
+      <view class="form-item">
         <text class="field-label">夏令时</text>
         <view class="switch-wrap">
           <switch
             checked="{{daylightSaving}}"
-            color="#7B47E5"
+            color="#4A148C"
             bindchange="handleDaylightSavingChange"
             aria-label="夏令时"
           />
         </view>
+      </view>
+
+      <view class="form-item form-item--last">
+        <text class="field-label">备注</text>
+        <input
+          class="field-input"
+          value="{{remark}}"
+          placeholder="如：本人、伴侣（选填）"
+          placeholder-class="field-placeholder"
+          maxlength="{{remarkMaxLength}}"
+          bindinput="handleRemarkInput"
+        />
       </view>
     </view>
 
