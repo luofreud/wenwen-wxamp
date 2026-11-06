@@ -320,9 +320,10 @@ Page({
       wx.hideLoading()
       const record = asRecord(error)
       const message = text(record.errMsg ?? record.message)
-      if (!message.includes('cancel')) {
-        wx.showToast({ title: '星盘图片生成失败，请稍后重试', icon: 'none' })
-      }
+      if (message === 'showShareImageMenu:fail cancel') return
+
+      console.warn('分享星盘图片失败', error)
+      wx.showToast({ title: '星盘图片生成失败，请稍后重试', icon: 'none' })
     } finally {
       this.setData({ isSharingChart: false })
     }

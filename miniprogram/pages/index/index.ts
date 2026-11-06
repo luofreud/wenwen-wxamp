@@ -45,6 +45,7 @@ interface HomeFortuneRuntime {
 interface HomeLiveEvent extends UpcomingLiveEvent {
   description: string
   detailUrl: string
+  isLive: boolean
 }
 
 interface FeaturedAssessment extends AssessmentType {
@@ -146,6 +147,21 @@ function formatLiveStartTime(value: string): string {
   const hour = String(date.getHours()).padStart(2, '0')
   const minute = String(date.getMinutes()).padStart(2, '0')
   return `${month}月${day}日 ${hour}:${minute} 开播`
+}
+
+function isLiveNow(
+  startAt: string,
+  endAt: string | undefined,
+  now = Date.now(),
+): boolean {
+  const startTime = Date.parse(startAt)
+  const endTime = Date.parse(endAt ?? '')
+  return (
+    Number.isFinite(startTime) &&
+    Number.isFinite(endTime) &&
+    startTime <= now &&
+    now <= endTime
+  )
 }
 
 function archiveFortuneKey(archive: Archive, date: string): string {
@@ -328,7 +344,8 @@ Page({
     await Promise.all([
       this.loadArchiveFortune(),
       this.loadLiveEvent(),
-      this.loadAssessmentTypes(),
+      // TODO v2.0 联调后开启
+      // this.loadAssessmentTypes(),
     ])
 
     const currentRuntime = homeFortuneRuntime.get(this)
@@ -495,6 +512,7 @@ Page({
           description,
           reservation_count: reservationCount,
           detailUrl: `/pages/live-preview/index?id=${encodeURIComponent(liveEvent.event_no)}`,
+          isLive: isLiveNow(liveEvent.start_at, liveEvent.end_at),
         },
       })
     } catch {

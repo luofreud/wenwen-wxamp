@@ -175,7 +175,7 @@
           class="reserve-button"
           url="{{liveEvent.detailUrl}}"
           hover-class="reserve-button--pressed"
-        >{{liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
+        >{{liveEvent.isLive || liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
       </view>
     </view>
   </view>

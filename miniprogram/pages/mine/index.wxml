@@ -244,6 +244,7 @@
         class="feature-card feature-card--report"
         url="/pages/reports/list"
         hover-class="feature-card--pressed"
+        style="display: none;"
       >
         <image
           class="feature-card__background"

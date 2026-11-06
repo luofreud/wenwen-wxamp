@@ -206,7 +206,8 @@ Page({
       appId,
       path,
       envVersion: 'release',
-      fail: () => {
+      fail: (res) => {
+        if (res.errMsg === 'navigateToMiniProgram:fail cancel') return
         wx.showToast({ title: '进入直播间失败', icon: 'none' })
       },
     })

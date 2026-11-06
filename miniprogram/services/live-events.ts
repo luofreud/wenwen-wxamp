@@ -33,6 +33,7 @@ interface UpcomingLiveEvent {
   event_no: string
   title: string
   start_at: string
+  end_at?: string
   status: LiveEventStatus
   reservation_status: ReservationStatus
   reservation_count: number

@@ -60,7 +60,21 @@
           loading="{{liveTimeState === 'upcoming' && isReserving}}"
           disabled="{{isReserving || liveTimeState === 'ended' || (liveTimeState === 'upcoming' && liveEvent.reservation_status === 'reserved')}}"
           bindtap="handlePrimaryAction"
-        >{{isReserving ? '预约中' : (liveTimeState === 'live' ? '进入直播间' : (liveTimeState === 'ended' ? '已结束' : (liveEvent.reservation_status === 'reserved' ? '已预约' : '预约直播')))}}</button>
+        >
+          <block wx:if="{{liveTimeState === 'live'}}">
+            <view class="live-equalizer" aria-hidden="true">
+              <view class="live-equalizer__bar live-equalizer__bar--first"></view>
+              <view class="live-equalizer__bar live-equalizer__bar--second"></view>
+              <view class="live-equalizer__bar live-equalizer__bar--third"></view>
+              <view class="live-equalizer__bar live-equalizer__bar--fourth"></view>
+            </view>
+            <text>进入直播间</text>
+          </block>
+          <text wx:elif="{{isReserving}}">预约中</text>
+          <text wx:elif="{{liveTimeState === 'ended'}}">已结束</text>
+          <text wx:elif="{{liveEvent.reservation_status === 'reserved'}}">已预约</text>
+          <text wx:else>预约直播</text>
+        </button>
       </view>
       <view class="action-button-wrap">
         <button
