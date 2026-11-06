@@ -480,7 +480,7 @@ Component({
 
   data: {
     theme: 'degree' as ThemeName,
-    zodiacStyle: 'symbol' as ZodiacStyle,
+    zodiacStyle: 'text' as ZodiacStyle,
     chartFormat: DEFAULT_CHART_SETTINGS.format as 0 | 1,
     styleSheetVisible: false,
     chartReady: false,
