@@ -3,6 +3,7 @@ import { getAssessmentTypes, getUpcomingLiveEvents, requestXingpango } from '../
 import type { Archive, AssessmentType, UpcomingLiveEvent } from '../../services/index'
 import { archiveStore } from '../../stores/index'
 import type { ArchiveState } from '../../stores/index'
+import { DEFAULT_COLOR_HEX, resolveNamedColor } from '../../utils/color'
 
 type FortuneState = 'archive-loading' | 'fortune-loading' | 'empty' | 'ready' | 'error'
 
@@ -15,6 +16,7 @@ interface FortuneScoreItem {
 }
 
 interface FortuneLuckItem {
+  colorHex?: string
   icon: string
   value: string
   label: string
@@ -194,7 +196,13 @@ function fortuneLuckItems(fortune: DailyFortune): FortuneLuckItem[] {
   return [
     { icon: '🌷', value: fortune.luckyFlower || '--', label: '幸运花', tone: 'flower' },
     { icon: '◆', value: fortune.luckyStone || '--', label: '幸运石', tone: 'gem' },
-    { icon: '', value: fortune.luckyColor || '--', label: '幸运色', tone: 'color' },
+    {
+      colorHex: resolveNamedColor(fortune.luckyColor),
+      icon: '',
+      value: fortune.luckyColor || '--',
+      label: '幸运色',
+      tone: 'color',
+    },
     { icon: formatNumber(fortune.luckyNumber), value: `数字 ${formatNumber(fortune.luckyNumber)}`, label: '幸运数', tone: 'number' },
   ]
 }
@@ -211,7 +219,7 @@ function placeholderLuckItems(): FortuneLuckItem[] {
   return [
     { icon: '🌷', value: '--', label: '幸运花', tone: 'flower' },
     { icon: '◆', value: '--', label: '幸运石', tone: 'gem' },
-    { icon: '', value: '--', label: '幸运色', tone: 'color' },
+    { colorHex: DEFAULT_COLOR_HEX, icon: '', value: '--', label: '幸运色', tone: 'color' },
     { icon: '--', value: '数字 --', label: '幸运数', tone: 'number' },
   ]
 }

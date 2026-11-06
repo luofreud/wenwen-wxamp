@@ -129,7 +129,11 @@
         <view class="luck-grid">
           <view wx:for="{{luckItems}}" wx:key="label" class="luck-card">
             <view class="luck-icon luck-icon--{{item.tone}}">
-              <view wx:if="{{item.tone === 'color'}}" class="color-swatch"></view>
+              <view
+                wx:if="{{item.tone === 'color'}}"
+                class="color-swatch"
+                style="background-color: {{item.colorHex}};"
+              ></view>
               <text wx:else>{{item.icon}}</text>
             </view>
             <view class="luck-copy">
