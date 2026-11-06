@@ -60,6 +60,26 @@ function text(value: unknown): string {
   return value == null ? '' : String(value).trim()
 }
 
+function shareImageErrorPrompt(message: string): string | null {
+  if (message === 'showShareImageMenu:fail cancel') return null
+  if (message.includes('showShareImageMenu:fail invalid path')) {
+    return '分享图片路径无效，请重试'
+  }
+  if (message.includes('fail url not in domain list')) {
+    return '图片域名未配置，请联系管理员'
+  }
+  if (message.includes("Cannot read property 'initScl' of undefined")) {
+    return '当前调试环境暂不支持分享'
+  }
+  if (message.includes("method 'share' not supported")) {
+    return '当前环境不支持图片分享'
+  }
+  if (message.includes('writeFile:fail no such file or directory')) {
+    return '分享图片文件不存在，请重试'
+  }
+  return '分享中断'
+}
+
 function archiveAnalysisKey(archive: Archive): string {
   return [
     archive.id,
@@ -320,10 +340,11 @@ Page({
       wx.hideLoading()
       const record = asRecord(error)
       const message = text(record.errMsg ?? record.message)
-      if (message === 'showShareImageMenu:fail cancel') return
+      const prompt = shareImageErrorPrompt(message)
+      if (!prompt) return
 
       console.warn('分享星盘图片失败', error)
-      wx.showToast({ title: '星盘图片生成失败，请稍后重试', icon: 'none' })
+      wx.showToast({ title: prompt, icon: 'none' })
     } finally {
       this.setData({ isSharingChart: false })
     }
