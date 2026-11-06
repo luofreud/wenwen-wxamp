@@ -44,10 +44,6 @@
           <text class="meta-label">预约人数：</text>
           <text class="meta-value meta-value--count">{{liveEvent.reservation_count}} 人已预约</text>
         </view>
-        <view class="meta-row">
-          <text class="meta-label">直播链接：</text>
-          <text class="meta-value meta-value--link" user-select="true">{{liveEvent.h5_url}}</text>
-        </view>
       </view>
     </view>
 

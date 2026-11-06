@@ -9,18 +9,6 @@ type LiveTimeState = 'upcoming' | 'live' | 'ended'
 const DEFAULT_LIVE_DURATION_MS = 3 * 60 * 60 * 1000
 const liveStateTimerByPage = new WeakMap<object, ReturnType<typeof setInterval>>()
 
-const openWebUrl = (url: string | null | undefined, emptyMessage: string): void => {
-  const targetUrl = url?.trim() ?? ''
-  if (!/^https:\/\//i.test(targetUrl)) {
-    wx.showToast({ title: emptyMessage, icon: 'none' })
-    return
-  }
-
-  wx.navigateTo({
-    url: `/pages/web-view/index?url=${encodeURIComponent(targetUrl)}`,
-  })
-}
-
 // 预约前申请直播提醒订阅授权；后续可追加第二个提醒模板。
 const LIVE_REMINDER_TEMPLATE_IDS = [
   'EdGu2lM-BKrA3-cXAxaH0jJpv6N31yWaJ4lxjqHYCSU',
@@ -207,7 +195,21 @@ Page({
   },
 
   enterLiveRoom() {
-    openWebUrl(this.data.liveEvent?.h5_url, '直播链接暂不可用')
+    const appId = this.data.liveEvent?.mini_program_app_id?.trim() ?? ''
+    const path = this.data.liveEvent?.mini_program_path?.trim() ?? ''
+    if (!appId || !path) {
+      wx.showToast({ title: '直播小程序暂不可用', icon: 'none' })
+      return
+    }
+
+    wx.navigateToMiniProgram({
+      appId,
+      path,
+      envVersion: 'release',
+      fail: () => {
+        wx.showToast({ title: '进入直播间失败', icon: 'none' })
+      },
+    })
   },
 
   async reserveLiveEvent(): Promise<void> {

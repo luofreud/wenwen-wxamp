@@ -1,10 +1,4 @@
 // pages/mine/index.ts
-import {
-  checkIn,
-  getTodayCheckIn,
-  getUserProfile,
-  updateUserProfile,
-} from '../../services/index'
 import type {
   CheckInStatus,
   RewardCycleItem,
@@ -12,6 +6,11 @@ import type {
   UpdateUserProfileParams,
   UserProfile,
 } from '../../services/index'
+import { checkInStore, userProfileStore } from '../../stores/index'
+import type {
+  CheckInState,
+  UserProfileState,
+} from '../../stores/index'
 
 interface GetUserInfoEvent {
   detail: {
@@ -51,6 +50,11 @@ interface CycleDayTapEvent {
   }
 }
 
+interface MinePageRuntime {
+  unsubscribeCheckIn: () => void
+  unsubscribeProfile: () => void
+}
+
 const hasText = (value: string | null): boolean => {
   return Boolean(value?.trim())
 }
@@ -83,21 +87,6 @@ const getProfileZodiac = (birthDate: string | null): ProfileZodiac | null => {
   }
 
   return PROFILE_ZODIACS.find(({ end }) => monthDay <= end) ?? null
-}
-
-const isSuccessCode = (code: number): boolean => {
-  return code === 0 || code === 200
-}
-
-const isValidCheckInStatus = (status: CheckInStatus): boolean => {
-  return (
-    typeof status.has_checked_in === 'boolean' &&
-    Number.isFinite(status.current_cycle_day) &&
-    Number.isFinite(status.star_coin_balance) &&
-    Array.isArray(status.reward_cycle) &&
-    status.reward_cycle.length > 0 &&
-    Array.isArray(status.reward_milestones)
-  )
 }
 
 const getCycleDayLabel = (
@@ -162,6 +151,8 @@ const getNextMilestone = (status: CheckInStatus): NextMilestoneView | null => {
   }
 }
 
+const minePageRuntime = new WeakMap<object, MinePageRuntime>()
+
 Page({
   data: {
     navigationReady: false,
@@ -186,6 +177,15 @@ Page({
   },
 
   onLoad() {
+    const runtime: MinePageRuntime = {
+      unsubscribeCheckIn: checkInStore.subscribe((state) => {
+        this.applyCheckInState(state)
+      }),
+      unsubscribeProfile: userProfileStore.subscribe((state) => {
+        this.applyUserProfileState(state)
+      }),
+    }
+    minePageRuntime.set(this, runtime)
     this.initNavigation()
   },
 
@@ -195,6 +195,13 @@ Page({
     }
     void this.loadUserProfile()
     void this.loadCheckInStatus()
+  },
+
+  onUnload() {
+    const runtime = minePageRuntime.get(this)
+    runtime?.unsubscribeCheckIn()
+    runtime?.unsubscribeProfile()
+    minePageRuntime.delete(this)
   },
 
   initNavigation() {
@@ -241,33 +248,51 @@ Page({
     })
   },
 
-  async loadUserProfile(): Promise<void> {
-    this.setData({
-      isProfileLoading: true,
-      profileError: '',
-    })
-
-    try {
-      const response = await getUserProfile()
-      if (response.code !== 200) {
-        this.setData({ profileError: response.msg || '资料加载失败' })
-        return
-      }
-
-      this.setProfile(response.data)
-    } catch (error) {
+  applyUserProfileState(state: Readonly<UserProfileState>): void {
+    if (state.profile) {
+      this.setProfile(state.profile)
+    } else {
       this.setData({
-        profileError: error instanceof Error
-          ? error.message
-          : '网络开小差了，请稍后重试',
+        profile: null,
+        isProfileEmpty: false,
+        needsWechatInfo: false,
+        profileZodiac: '',
+        profileZodiacIcon: '',
+        profileZodiacTone: 'blue',
       })
-    } finally {
-      this.setData({ isProfileLoading: false })
+    }
+
+    this.setData({
+      isProfileLoading: !state.profile && (state.isLoading || !state.error),
+      isProfileUpdating: state.isUpdating,
+      profileError: state.profile ? '' : state.error,
+    })
+  },
+
+  applyCheckInState(state: Readonly<CheckInState>): void {
+    const status = state.status
+    this.setData({
+      checkInStatus: status,
+      checkInDays: status ? toCheckInDays(status) : [],
+      nextMilestone: status ? getNextMilestone(status) : null,
+      isCheckInLoading: !status && (state.isLoading || !state.error),
+      isCheckingIn: state.isCheckingIn,
+      checkInError: status ? '' : state.error,
+    })
+  },
+
+  async loadUserProfile(): Promise<void> {
+    try {
+      await userProfileStore.init()
+    } catch {
+      // Store 已记录错误并通知页面。
     }
   },
 
   retryProfile() {
-    void this.loadUserProfile()
+    void userProfileStore.refresh().catch(() => {
+      // Store 已记录错误并通知页面。
+    })
   },
 
   handleGetUserInfo(event: GetUserInfoEvent) {
@@ -295,62 +320,31 @@ Page({
     params: UpdateUserProfileParams,
     successMessage: string,
   ): Promise<void> {
-    if (this.data.isProfileUpdating) return
-    this.setData({ isProfileUpdating: true })
+    if (userProfileStore.getSnapshot().isUpdating) return
 
     try {
-      const response = await updateUserProfile(params)
-      if (response.code !== 200) return
-
-      this.setProfile(response.data)
+      await userProfileStore.update(params)
       wx.showToast({ title: successMessage, icon: 'success' })
     } catch (error) {
       wx.showToast({
         title: error instanceof Error ? error.message : '资料更新失败，请重试',
         icon: 'none',
       })
-    } finally {
-      this.setData({ isProfileUpdating: false })
     }
   },
 
-  async loadCheckInStatus(showLoading = true): Promise<CheckInStatus | null> {
-    if (showLoading) {
-      this.setData({ isCheckInLoading: true })
-    }
-    this.setData({ checkInError: '' })
-
+  async loadCheckInStatus(): Promise<void> {
     try {
-      const response = await getTodayCheckIn()
-      if (!isSuccessCode(response.code)) {
-        this.setData({ checkInError: response.msg || '获取签到信息失败，请稍后重试' })
-        return null
-      }
-      if (!isValidCheckInStatus(response.data)) {
-        this.setData({ checkInError: '签到数据格式不正确' })
-        return null
-      }
-
-      this.setData({
-        checkInStatus: response.data,
-        checkInDays: toCheckInDays(response.data),
-        nextMilestone: getNextMilestone(response.data),
-      })
-      return response.data
-    } catch (error) {
-      this.setData({
-        checkInError: error instanceof Error
-          ? error.message
-          : '获取签到信息失败，请稍后重试',
-      })
-      return null
-    } finally {
-      this.setData({ isCheckInLoading: false })
+      await checkInStore.init()
+    } catch {
+      // Store 已记录错误并通知页面。
     }
   },
 
   retryCheckInStatus() {
-    void this.loadCheckInStatus()
+    void checkInStore.refresh().catch(() => {
+      // Store 已记录错误并通知页面。
+    })
   },
 
   handleCycleDayTap(event: CycleDayTapEvent) {
@@ -364,29 +358,21 @@ Page({
     if (
       !status ||
       status.has_checked_in ||
-      this.data.isCheckingIn ||
+      checkInStore.getSnapshot().isCheckingIn ||
       this.data.isCheckInLoading
     ) {
       return
     }
 
-    this.setData({ isCheckingIn: true })
-
     try {
-      const response = await checkIn()
-      if (!isSuccessCode(response.code)) {
-        wx.showToast({
-          title: response.msg || '签到失败，请稍后重试',
-          icon: 'none',
-        })
+      const submission = await checkInStore.submit()
+      if (!submission.performed) {
+        wx.showToast({ title: '今日已签到', icon: 'none' })
         return
       }
 
-      const refreshedStatus = await this.loadCheckInStatus(false)
-      const reward = refreshedStatus?.today_reward_star_coins
-        ?? response.data.today_reward_star_coins
       wx.showToast({
-        title: `签到成功，获得${reward}星币`,
+        title: `签到成功，获得${submission.status.today_reward_star_coins}星币`,
         icon: 'success',
       })
     } catch (error) {
@@ -394,8 +380,6 @@ Page({
         title: error instanceof Error ? error.message : '签到失败，请稍后重试',
         icon: 'none',
       })
-    } finally {
-      this.setData({ isCheckingIn: false })
     }
   },
 })
