@@ -1,4 +1,5 @@
 import {
+  cancelLiveEventReservation,
   getLiveEvent,
   reserveLiveEvent as reserveLiveEventRequest,
 } from '../../services/index'
@@ -63,6 +64,19 @@ const getAcceptedSubscriptionCount = (): Promise<0 | 2> => {
   })
 }
 
+const confirmCancelReservation = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    wx.showModal({
+      title: '取消预约',
+      content: '确定取消这场直播的预约吗？',
+      confirmText: '取消预约',
+      confirmColor: '#9b51e0',
+      success: (result) => resolve(result.confirm),
+      fail: () => resolve(false),
+    })
+  })
+}
+
 Page({
   data: {
     eventNo: '',
@@ -71,6 +85,7 @@ Page({
     liveTimeState: 'upcoming' as LiveTimeState,
     isLoading: true,
     isReserving: false,
+    isCancelling: false,
     loadError: '',
   },
 
@@ -191,6 +206,10 @@ Page({
       return
     }
     if (this.data.liveTimeState === 'ended') return
+    if (this.data.liveEvent?.reservation_status === 'reserved') {
+      void this.cancelReservation()
+      return
+    }
     void this.reserveLiveEvent()
   },
 
@@ -215,7 +234,7 @@ Page({
 
   async reserveLiveEvent(): Promise<void> {
     const liveEvent = this.data.liveEvent
-    if (!liveEvent || this.data.isReserving) return
+    if (!liveEvent || this.data.isReserving || this.data.isCancelling) return
 
     if (liveEvent.reservation_status === 'reserved') {
       wx.showToast({ title: '你已经预约过了', icon: 'none' })
@@ -247,6 +266,51 @@ Page({
       })
     } finally {
       this.setData({ isReserving: false })
+    }
+  },
+
+  async cancelReservation(): Promise<void> {
+    const liveEvent = this.data.liveEvent
+    if (
+      !liveEvent
+      || liveEvent.reservation_status !== 'reserved'
+      || this.data.isReserving
+      || this.data.isCancelling
+    ) {
+      return
+    }
+
+    const confirmed = await confirmCancelReservation()
+    if (!confirmed) return
+
+    const currentLiveEvent = this.data.liveEvent
+    if (!currentLiveEvent || currentLiveEvent.reservation_status !== 'reserved') return
+
+    this.setData({ isCancelling: true })
+
+    try {
+      const response = await cancelLiveEventReservation(currentLiveEvent.event_no)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '取消预约失败')
+      }
+
+      this.setData({
+        liveEvent: {
+          ...currentLiveEvent,
+          reservation_status: 'cancelled',
+          reservation_count: response.data.cancelled
+            ? Math.max(0, currentLiveEvent.reservation_count - 1)
+            : currentLiveEvent.reservation_count,
+        },
+      })
+      wx.showToast({ title: '已取消预约', icon: 'success' })
+    } catch (error) {
+      wx.showToast({
+        title: error instanceof Error ? error.message : '取消预约失败，请稍后重试',
+        icon: 'none',
+      })
+    } finally {
+      this.setData({ isCancelling: false })
     }
   },
 

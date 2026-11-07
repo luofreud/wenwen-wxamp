@@ -57,8 +57,8 @@
         <button
           class="action-button action-button--reserve {{liveTimeState === 'ended' || (liveTimeState === 'upcoming' && liveEvent.reservation_status === 'reserved') ? 'action-button--reserved' : ''}}"
           hover-class="action-button--pressed"
-          loading="{{liveTimeState === 'upcoming' && isReserving}}"
-          disabled="{{isReserving || liveTimeState === 'ended' || (liveTimeState === 'upcoming' && liveEvent.reservation_status === 'reserved')}}"
+          loading="{{liveTimeState === 'upcoming' && (isReserving || isCancelling)}}"
+          disabled="{{isReserving || isCancelling || liveTimeState === 'ended'}}"
           bindtap="handlePrimaryAction"
         >
           <block wx:if="{{liveTimeState === 'live'}}">
@@ -71,8 +71,9 @@
             <text>进入直播间</text>
           </block>
           <text wx:elif="{{isReserving}}">预约中</text>
+          <text wx:elif="{{isCancelling}}">取消中</text>
           <text wx:elif="{{liveTimeState === 'ended'}}">已结束</text>
-          <text wx:elif="{{liveEvent.reservation_status === 'reserved'}}">已预约</text>
+          <text wx:elif="{{liveEvent.reservation_status === 'reserved'}}">取消预约</text>
           <text wx:else>预约直播</text>
         </button>
       </view>
