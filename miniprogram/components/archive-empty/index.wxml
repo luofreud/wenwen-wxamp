@@ -1,6 +1,6 @@
 <view class="archive-empty">
   <text class="archive-empty__title">今天的心情，想被看见吗？</text>
-  <text class="archive-empty__description">添加档案，让星星陪你读懂此刻的自己</text>
+  <text class="archive-empty__description">添加档案，留住此刻真实的自己</text>
 
   <view class="archive-empty__action-stage">
     <view class="sparkle sparkle--left-top"></view>
