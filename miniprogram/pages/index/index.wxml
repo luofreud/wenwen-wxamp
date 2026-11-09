@@ -37,16 +37,6 @@
         </view>
       </view>
 
-      <view class="home-skeleton__live" aria-hidden="true">
-        <view class="skeleton-block skeleton-live-title"></view>
-        <view class="skeleton-block skeleton-live-line"></view>
-        <view class="skeleton-block skeleton-live-line skeleton-live-line--short"></view>
-        <view class="home-skeleton__live-actions">
-          <view class="skeleton-block skeleton-live-viewers"></view>
-          <view class="skeleton-block skeleton-live-button"></view>
-        </view>
-      </view>
-
       <view class="skeleton-block home-skeleton__banner" aria-hidden="true"></view>
 
       <view class="home-skeleton__reports" aria-hidden="true">
@@ -142,44 +132,6 @@
             </view>
           </view>
         </view>
-      </view>
-    </view>
-  </view>
-
-  <view wx:if="{{liveEvent}}" class="live-card">
-    <image
-      class="live-card__background"
-      src="https://xzxyshijin.oss-cn-hangzhou.aliyuncs.com/shuijingTP/live-pre-backgroud.png"
-      mode="widthFix"
-      aria-hidden="true"
-    />
-    <view class="live-copy">
-      <text class="live-title">{{liveEvent.title}}</text>
-      <view class="live-description-wrap">
-        <text class="live-description">{{liveEvent.description}}</text>
-      </view>
-      <view class="live-action-row">
-        <view class="reservation-row">
-          <view
-            wx:if="{{liveEvent.reservation_count > 0}}"
-            class="live-avatar-stack {{liveEvent.reservation_count > 4 ? 'live-avatar-stack--animated' : 'live-avatar-stack--' + liveEvent.reservation_count}}"
-            aria-label="预约用户头像"
-          >
-            <view class="live-avatar-track {{liveEvent.reservation_count > 4 ? 'live-avatar-track--animated' : ''}} {{liveEvent.reservation_count > 4 && avatarShifting ? 'live-avatar-track--shifting' : ''}}">
-              <image class="live-viewer-avatar" src="{{liveAvatarItems[0]}}" mode="aspectFill" aria-hidden="true" />
-              <image wx:if="{{liveEvent.reservation_count > 1}}" class="live-viewer-avatar" src="{{liveAvatarItems[1]}}" mode="aspectFill" aria-hidden="true" />
-              <image wx:if="{{liveEvent.reservation_count > 2}}" class="live-viewer-avatar" src="{{liveAvatarItems[2]}}" mode="aspectFill" aria-hidden="true" />
-              <image wx:if="{{liveEvent.reservation_count > 3}}" class="live-viewer-avatar" src="{{liveAvatarItems[3]}}" mode="aspectFill" aria-hidden="true" />
-              <image wx:if="{{liveEvent.reservation_count > 4}}" class="live-viewer-avatar" src="{{liveAvatarItems[4]}}" mode="aspectFill" aria-hidden="true" />
-            </view>
-          </view>
-          <text class="reservation-count {{liveEvent.reservation_count === 0 ? 'reservation-count--solo' : ''}}">{{liveEvent.reservation_count}}人已预约</text>
-        </view>
-        <navigator
-          class="reserve-button"
-          url="{{liveEvent.detailUrl}}"
-          hover-class="reserve-button--pressed"
-        >{{liveEvent.isLive || liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
       </view>
     </view>
   </view>

@@ -240,31 +240,6 @@
         </view>
       </navigator>
 
-      <navigator
-        class="feature-card feature-card--report"
-        url="/pages/reports/list"
-        hover-class="feature-card--pressed"
-        style="display: none;"
-      >
-        <image
-          class="feature-card__background"
-          src="/assets/images/archive-background-02.png"
-          mode="widthFix"
-          aria-hidden="true"
-        />
-        <view class="feature-card__content">
-          <image
-            class="feature-icon"
-            src="/assets/images/archive-icon-02.png"
-            mode="aspectFit"
-            aria-hidden="true"
-          />
-          <view class="feature-copy">
-            <text class="feature-title">我的报告</text>
-            <text class="feature-subtitle">查看星座解读</text>
-          </view>
-        </view>
-      </navigator>
     </block>
   </view>
   </view>

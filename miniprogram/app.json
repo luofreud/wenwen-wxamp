@@ -4,12 +4,9 @@
     "pages/logs/logs",
     "pages/mine/index",
     "pages/star-chart/index",
-    "pages/live-preview/index",
-    "pages/web-view/index",
     "pages/archives/index",
     "pages/archives/edit",
-    "pages/archives/switch",
-    "pages/reports/list"
+    "pages/archives/switch"
   ],
   "window": {
     "navigationBarTextStyle": "black",
