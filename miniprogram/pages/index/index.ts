@@ -424,4 +424,11 @@ Page({
       console.warn('获取导航栏尺寸失败', error)
     }
   },
+
+  onShareAppMessage() {
+    return {
+      title: '来看看你的今日运势',
+      path: '/pages/index/index',
+    }
+  },
 })

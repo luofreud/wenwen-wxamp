@@ -232,12 +232,13 @@ const THEMES: Record<ThemeName, ChartTheme> = {
 
 const ZODIAC_SYMBOLS = ['♈︎', '♉︎', '♊︎', '♋︎', '♌︎', '♍︎', '♎︎', '♏︎', '♐︎', '♑︎', '♒︎', '♓︎']
 const ZODIAC_FONT_CHARS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-const ZODIAC_SHORT_NAMES = ['羊', '牛', '双', '蟹', '狮', '处', '秤', '蝎', '射', '羯', '瓶', '鱼']
+const ZODIAC_SHORT_NAMES = ['羊', '牛', '双', '蟹', '狮', '处', '秤', '蝎', '射', '摩', '瓶', '鱼']
 const ZODIAC_COLORS = [
   '#e35d5b', '#f2c94c', '#36a66a', '#327cf2',
   '#e35d5b', '#f2c94c', '#36a66a', '#327cf2',
   '#e35d5b', '#f2c94c', '#36a66a', '#327cf2',
 ]
+const DEGREE_EARTH_COLOR = '#b89562'
 const PLANET_COLORS: Record<string, string> = {
   '0': '#e5902e',
   '1': '#8c929b',
@@ -619,7 +620,10 @@ Component({
           planet_xf: [...settings.planetXf],
           planet_degree: { ...settings.planetDegree },
           phase: { ...settings.phase },
-          birthday: formatArchiveBirthday(archive.birth_time, archive.daylight_saving),
+          birthday: formatArchiveBirthday(
+            archive.birth_time,
+            archive.daylight_saving === 1 ? 1 : 0,
+          ),
           tz: archive.timezone,
           longitude: birthLongitude,
           latitude: birthLatitude,
@@ -687,9 +691,9 @@ Component({
         .fields({ node: true, size: true })
         .exec((result) => {
           const field = result[0] as CanvasField
-          const canvas = field.node as WechatMiniprogram.Canvas
-          const width = field.width
-          const height = field.height
+          const canvas = field?.node as WechatMiniprogram.Canvas
+          const width = field?.width
+          const height = field?.height
           if (!canvas || !width || !height) return
 
           const pixelRatio = getPixelRatio()
@@ -743,7 +747,19 @@ Component({
       if (themeName === 'classic') {
         this.drawClassicAxes(context, center, radius, ascDegree, payload.house, uiScale)
       }
-      this.drawZodiac(context, center, radius, zodiacInner, ascDegree, themeName, theme, style, uiScale)
+      this.drawZodiac(
+        context,
+        center,
+        radius,
+        zodiacInner,
+        ascDegree,
+        themeName,
+        theme,
+        style,
+        payload.house,
+        this.data.chartFormat,
+        uiScale,
+      )
       this.drawHouses(
         context,
         center,
@@ -758,6 +774,7 @@ Component({
       this.drawAspects(context, center, themeName === 'classic' ? fourthInner * 0.75 : fourthInner, ascDegree, themeName, payload.planet, uiScale)
       this.drawHouseNumbers(context, center, (fourthOuter + fourthInner) / 2, ascDegree, themeName, theme, payload.house, uiScale)
       this.drawPlanets(context, center, themeName === 'classic' ? fourthInner : (secondInner + thirdInner) / 2, ascDegree, themeName, theme, style, payload.planet, uiScale)
+      this.drawArcBrand(context, center, radius, uiScale)
     },
 
     scheduleChartDraw() {
@@ -902,31 +919,59 @@ Component({
       themeName: ThemeName,
       theme: ChartTheme,
       style: ZodiacStyle,
+      houses: House[],
+      chartFormat: number,
       uiScale: number,
     ) {
       const contentRadius = (radius + zodiacInner) / 2
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      for (let signId = 0; signId < 12; signId += 1) {
-        const dividerInner = pointOnCircle(center, zodiacInner, signId * 30, ascDegree)
-        const dividerOuter = pointOnCircle(center, radius, signId * 30, ascDegree)
-        context.strokeStyle = themeName === 'stardust' ? 'rgba(255,255,255,0.82)' : theme.subtleLine
-        context.lineWidth = 0.8 * uiScale
-        context.beginPath()
-        context.moveTo(dividerInner.x, dividerInner.y)
-        context.lineTo(dividerOuter.x, dividerOuter.y)
-        context.stroke()
 
-        const point = pointOnCircle(center, contentRadius, signId * 30 + 15, ascDegree)
+      if (themeName !== 'degree') {
+        for (let signId = 0; signId < 12; signId += 1) {
+          const dividerInner = pointOnCircle(center, zodiacInner, signId * 30, ascDegree)
+          const dividerOuter = pointOnCircle(center, radius, signId * 30, ascDegree)
+          context.strokeStyle = themeName === 'stardust' ? 'rgba(255,255,255,0.82)' : theme.subtleLine
+          context.lineWidth = 0.8 * uiScale
+          context.beginPath()
+          context.moveTo(dividerInner.x, dividerInner.y)
+          context.lineTo(dividerOuter.x, dividerOuter.y)
+          context.stroke()
+        }
+      }
+
+      const drawLabel = (signId: number, longitude: number, degree?: number, minute?: number) => {
+        const point = pointOnCircle(center, contentRadius, longitude, ascDegree)
         const label = style === 'symbol' ? ZODIAC_SYMBOLS[signId] : ZODIAC_SHORT_NAMES[signId]
-        const color = themeName === 'stardust' ? '#383838' : ZODIAC_COLORS[signId]
+        const color = themeName === 'stardust'
+          ? '#383838'
+          : themeName === 'degree' && [1, 5, 9].includes(signId)
+            ? DEGREE_EARTH_COLOR
+            : ZODIAC_COLORS[signId]
+        const labelSize = style === 'symbol' ? 17 * SYMBOL_SIZE_FACTOR : 13
         const drewGlyph = style === 'symbol'
-          && drawVectorGlyph(context, ixingpanGlyphs, ZODIAC_FONT_CHARS[signId], point.x, point.y, 17 * uiScale * SYMBOL_SIZE_FACTOR, color)
+          && drawVectorGlyph(context, ixingpanGlyphs, ZODIAC_FONT_CHARS[signId], point.x, point.y, labelSize * uiScale, color)
         if (!drewGlyph) {
           context.fillStyle = color
-          context.font = `${(style === 'symbol' ? 17 * SYMBOL_SIZE_FACTOR : 13) * uiScale}px sans-serif`
+          context.font = `${labelSize * uiScale}px sans-serif`
           context.fillText(label, point.x, point.y)
         }
+
+        if (degree !== undefined && minute !== undefined) {
+          const adjustedRadians = normalizeAngle(longitude + 180 - ascDegree) * Math.PI / 180
+          const tangent = {
+            x: -Math.sin(adjustedRadians),
+            y: -Math.cos(adjustedRadians),
+          }
+          const degreeWidth = 15
+          const gap = (labelSize / 2 + degreeWidth / 2 + 1) * uiScale
+          context.font = `500 ${9 * uiScale}px sans-serif`
+          context.fillStyle = theme.text
+          context.fillText(String(degree), point.x - tangent.x * gap, point.y - tangent.y * gap)
+          context.fillStyle = theme.secondaryText
+          context.fillText(String(minute), point.x + tangent.x * gap, point.y + tangent.y * gap)
+        }
+
         runtimeByInstance.get(this)?.detailTargets.push({
           x: point.x,
           y: point.y,
@@ -935,6 +980,59 @@ Component({
           key: signId,
         })
       }
+
+      if (themeName === 'degree' && chartFormat !== 0) {
+        const occupiedSignIds = new Set<number>()
+        const sortedHouses = [...houses].sort((left, right) => left.house_id - right.house_id)
+        sortedHouses.forEach((house) => {
+          occupiedSignIds.add(house.sign.sign_id)
+          drawLabel(
+            house.sign.sign_id,
+            house.longitude,
+            house.sign.deg,
+            house.sign.min,
+          )
+        })
+        for (let signId = 0; signId < 12; signId += 1) {
+          if (!occupiedSignIds.has(signId)) {
+            drawLabel(signId, signId * 30 + 15)
+          }
+        }
+        return
+      }
+
+      for (let signId = 0; signId < 12; signId += 1) {
+        drawLabel(signId, signId * 30 + 15)
+      }
+    },
+
+    drawArcBrand(
+      context: WechatMiniprogram.CanvasRenderingContext.CanvasRenderingContext2D,
+      center: Point,
+      radius: number,
+      uiScale: number,
+    ) {
+      const characters = Array.from('问问星盘')
+      const brandRadius = radius + 14.5 * uiScale
+      const startAngle = 216.7
+      const angleStep = 6
+
+      context.save()
+      context.fillStyle = 'rgba(140, 140, 140, 0.4)'
+      context.font = `500 ${13.1 * uiScale}px sans-serif`
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      characters.forEach((character, index) => {
+        const radians = (startAngle + index * angleStep) * Math.PI / 180
+        const x = center.x + brandRadius * Math.cos(radians)
+        const y = center.y + brandRadius * Math.sin(radians)
+        context.save()
+        context.translate(x, y)
+        context.rotate(radians + Math.PI / 2)
+        context.fillText(character, 0, 0)
+        context.restore()
+      })
+      context.restore()
     },
 
     drawHouses(
@@ -1129,27 +1227,40 @@ Component({
         const length = Math.sqrt(radialX * radialX + radialY * radialY) || 1
         const unitX = radialX / length
         const unitY = radialY / length
+        const isDegreeMidheavenText = themeName === 'degree'
+          && style === 'text'
+          && planet.planet_chinese === '中天'
         const entries = style === 'symbol'
           ? [PLANET_SYMBOLS[planet.code_name] ?? '·', String(planet.sign.deg), ZODIAC_SYMBOLS[planet.sign.sign_id], String(planet.sign.min), isRetrograde ? '℞' : '']
-          : [planet.planet_chinese, String(planet.sign.deg), planet.sign.sign_chinese, String(planet.sign.min), isRetrograde ? '逆' : '']
+          : [isDegreeMidheavenText ? '顶' : planet.planet_chinese, String(planet.sign.deg), planet.sign.sign_chinese, String(planet.sign.min), isRetrograde ? '逆' : '']
         const offsets = (style === 'symbol' ? SYMBOL_RING_OFFSETS : TEXT_RING_OFFSETS)
           .map((value) => value * uiScale)
         const fontSizes = style === 'symbol' ? SYMBOL_RING_FONT_SIZES : TEXT_RING_FONT_SIZES
+        const degreeSignColor = [1, 5, 9].includes(planet.sign.sign_id)
+          ? DEGREE_EARTH_COLOR
+          : ZODIAC_COLORS[planet.sign.sign_id] ?? theme.text
         entries.forEach((entry, index) => {
           if (!entry) return
-          const entryColor = index === 0 || index === 2 || index === 4 ? color : index === 3 ? theme.secondaryText : theme.text
+          const entryColor = themeName === 'degree'
+            ? index === 1 ? theme.text : degreeSignColor
+            : index === 0 || index === 2 || index === 4
+              ? color
+              : index === 3
+                ? theme.secondaryText
+                : theme.text
           const baseFontSize = fontSizes[index]
           const isSymbolGlyph = (style === 'symbol' && (index === 0 || index === 2)) || index === 4
           const fontSize = baseFontSize * uiScale * (isSymbolGlyph ? SYMBOL_SIZE_FACTOR : 1)
           const entryX = point.x + unitX * offsets[index]
           const entryY = point.y + unitY * offsets[index]
-          const glyphCharacter = index === 0
-            ? planet.planet_font
-            : index === 2
-              ? planet.sign.sign_font
-              : index === 4
-                ? 'Ú'
-                : ''
+          let glyphCharacter = ''
+          if (index === 0 && !isDegreeMidheavenText) {
+            glyphCharacter = planet.planet_font
+          } else if (index === 2) {
+            glyphCharacter = planet.sign.sign_font
+          } else if (index === 4) {
+            glyphCharacter = 'Ú'
+          }
           if (glyphCharacter) {
             const glyphs = index === 4
               ? ixingpanGlyphs
