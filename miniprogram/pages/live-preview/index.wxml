@@ -1,0 +1,90 @@
+<!-- pages/live-preview/index.wxml -->
+<view class="live-preview-page">
+  <view wx:if="{{isLoading}}" class="detail-card detail-card--loading">
+    <view class="preview-skeleton preview-skeleton--poster"></view>
+    <view class="preview-skeleton-body">
+      <view class="preview-skeleton preview-skeleton--title"></view>
+      <view class="preview-skeleton preview-skeleton--copy"></view>
+      <view class="preview-skeleton preview-skeleton--copy preview-skeleton--short"></view>
+    </view>
+  </view>
+
+  <view wx:elif="{{loadError}}" class="preview-state">
+    <view class="preview-state__orbit">!</view>
+    <text class="preview-state__title">这场直播暂时无法打开</text>
+    <text class="preview-state__copy">{{loadError}}</text>
+    <button wx:if="{{eventNo}}" class="preview-state__button" bindtap="retryLoad">重新加载</button>
+    <button class="preview-state__button preview-state__button--ghost" bindtap="goBack">返回首页</button>
+  </view>
+
+  <view wx:else class="detail-card">
+    <image
+      class="poster"
+      src="{{liveEvent.cover_url}}"
+      mode="widthFix"
+      aria-label="{{liveEvent.title}}直播封面"
+    />
+
+    <view class="live-info">
+      <text class="live-title">{{liveEvent.title}}</text>
+      <text class="live-description">{{liveEvent.description}}</text>
+
+      <view class="dashed-divider"></view>
+
+      <view class="meta-list">
+        <view class="meta-row">
+          <text class="meta-label">直播时间：</text>
+          <text class="meta-value" user-select="true">{{liveStartAtText}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">直播嘉宾：</text>
+          <text class="meta-value">{{liveEvent.host_name}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">预约人数：</text>
+          <text class="meta-value meta-value--count">{{liveEvent.reservation_count}} 人已预约</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="notice-copy">
+      <text class="notice-copy__accent">预约直播后，</text>
+      <text>如已授权订阅消息，将在开播前收到提醒；拒绝授权不会影响预约。</text>
+    </view>
+
+    <view class="action-area">
+      <view class="action-button-wrap action-button-wrap--reserve">
+        <button
+          class="action-button action-button--reserve {{liveTimeState === 'ended' || (liveTimeState === 'upcoming' && liveEvent.reservation_status === 'reserved') ? 'action-button--reserved' : ''}}"
+          hover-class="action-button--pressed"
+          loading="{{liveTimeState === 'upcoming' && (isReserving || isCancelling)}}"
+          disabled="{{isReserving || isCancelling || liveTimeState === 'ended'}}"
+          bindtap="handlePrimaryAction"
+        >
+          <block wx:if="{{liveTimeState === 'live'}}">
+            <view class="live-equalizer" aria-hidden="true">
+              <view class="live-equalizer__bar live-equalizer__bar--first"></view>
+              <view class="live-equalizer__bar live-equalizer__bar--second"></view>
+              <view class="live-equalizer__bar live-equalizer__bar--third"></view>
+              <view class="live-equalizer__bar live-equalizer__bar--fourth"></view>
+            </view>
+            <text>进入直播间</text>
+          </block>
+          <text wx:elif="{{isReserving}}">预约中</text>
+          <text wx:elif="{{isCancelling}}">取消中</text>
+          <text wx:elif="{{liveTimeState === 'ended'}}">已结束</text>
+          <text wx:elif="{{liveEvent.reservation_status === 'reserved'}}">取消预约</text>
+          <text wx:else>预约直播</text>
+        </button>
+      </view>
+      <view class="action-button-wrap">
+        <button
+          class="action-button action-button--share"
+          hover-class="action-button--pressed"
+          open-type="share"
+        >分享直播</button>
+      </view>
+    </view>
+
+  </view>
+</view>

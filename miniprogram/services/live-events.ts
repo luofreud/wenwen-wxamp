@@ -1,0 +1,123 @@
+import { http } from '../utils/http/index'
+import type { ApiResponse } from '../utils/http/index'
+import type { PaginationParams, PaginationResult } from './common'
+
+type LiveEventStatus = 'published'
+type ReservationStatus = 'reserved' | 'cancelled' | ''
+
+interface LiveEvent {
+  event_no: string
+  source_provider: string
+  external_live_id: string
+  title: string
+  cover_url: string
+  host_name: string
+  description: string
+  display_time_text: string
+  h5_url: string
+  mini_program_app_id: string
+  mini_program_path: string
+  start_at: string
+  end_at: string
+  status: LiveEventStatus
+  lock_version: number
+  reservation_status: ReservationStatus
+  reservation_count: number
+}
+
+interface LiveEventList extends PaginationResult {
+  items: LiveEvent[]
+}
+
+interface UpcomingLiveEvent {
+  event_no: string
+  title: string
+  start_at: string
+  end_at?: string
+  status: LiveEventStatus
+  reservation_status: ReservationStatus
+  reservation_count: number
+  description?: string
+  display_time_text?: string
+}
+
+interface UpcomingLiveEventList extends PaginationResult {
+  items: UpcomingLiveEvent[]
+}
+
+interface ReserveLiveEventParams {
+  subscription_accept_count: 0 | 1 | 2
+}
+
+interface LiveEventReservation {
+  reservation_no: string
+  status: 'reserved'
+  subscription_accept_count: number
+  reserved_at: string
+  created_at: string
+  updated_at: string
+}
+
+interface CancelLiveEventReservationResult {
+  cancelled: boolean
+}
+
+const getLiveEvents = (
+  params: PaginationParams = {},
+): Promise<ApiResponse<LiveEventList>> => {
+  return http<LiveEventList>({
+    url: '/live-events',
+    params: { ...params },
+  })
+}
+
+const getUpcomingLiveEvents = (): Promise<ApiResponse<UpcomingLiveEventList>> => {
+  return http<UpcomingLiveEventList>({
+    url: '/api/wechat/v1/live-events/upcoming',
+  })
+}
+
+const getLiveEvent = (eventNo: string): Promise<ApiResponse<LiveEvent>> => {
+  return http<LiveEvent>({
+    url: `/live-events/${encodeURIComponent(eventNo)}`,
+  })
+}
+
+const reserveLiveEvent = (
+  eventNo: string,
+  params: ReserveLiveEventParams,
+): Promise<ApiResponse<LiveEventReservation>> => {
+  return http<LiveEventReservation>({
+    url: `/live-events/${encodeURIComponent(eventNo)}/reservation`,
+    method: 'PUT',
+    params: { ...params },
+  })
+}
+
+const cancelLiveEventReservation = (
+  eventNo: string,
+): Promise<ApiResponse<CancelLiveEventReservationResult>> => {
+  return http<CancelLiveEventReservationResult>({
+    url: `/live-events/${encodeURIComponent(eventNo)}/reservation`,
+    method: 'DELETE',
+  })
+}
+
+export {
+  cancelLiveEventReservation,
+  getLiveEvent,
+  getLiveEvents,
+  getUpcomingLiveEvents,
+  reserveLiveEvent,
+}
+export type {
+  CancelLiveEventReservationResult,
+  LiveEvent,
+  LiveEventList,
+  LiveEventReservation,
+  LiveEventStatus,
+  ReservationStatus,
+  ReserveLiveEventParams,
+  UpcomingLiveEvent,
+  UpcomingLiveEventList,
+}
