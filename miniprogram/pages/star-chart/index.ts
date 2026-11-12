@@ -87,6 +87,7 @@ function archiveAnalysisKey(archive: Archive): string {
     archive.birth_latitude,
     archive.birth_longitude,
     archive.timezone,
+    archive.daylight_saving,
     archive.updated_at,
   ].join('|')
 }
@@ -95,6 +96,22 @@ function parseBirthTime(value: string): RegExpExecArray {
   const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(value.trim())
   if (!match) throw new Error('当前档案的出生时间格式无效')
   return match
+}
+
+function formatArchiveBirthTime(value: string, daylightSaving: 0 | 1): string {
+  const birthTime = parseBirthTime(value)
+  const timestamp = Date.UTC(
+    Number(birthTime[1]),
+    Number(birthTime[2]) - 1,
+    Number(birthTime[3]),
+    Number(birthTime[4]),
+    Number(birthTime[5]),
+    Number(birthTime[6] ?? 0),
+  ) - daylightSaving * 60 * 60 * 1000
+  const standardTime = new Date(timestamp)
+  const pad = (part: number): string => String(part).padStart(2, '0')
+
+  return `${standardTime.getUTCFullYear()}-${pad(standardTime.getUTCMonth() + 1)}-${pad(standardTime.getUTCDate())} ${pad(standardTime.getUTCHours())}:${pad(standardTime.getUTCMinutes())}:${pad(standardTime.getUTCSeconds())}`
 }
 
 function formatTimezone(value: number): string {
@@ -253,7 +270,10 @@ Page({
     }
 
     try {
-      const birthday = parseBirthTime(archive.birth_time)
+      const birthday = parseBirthTime(formatArchiveBirthTime(
+        archive.birth_time,
+        archive.daylight_saving === 1 ? 1 : 0,
+      ))
       const response = await requestXingpango<unknown>({
         path: NATAL_ANALYSIS_PATH,
         year: birthday[1],
@@ -262,8 +282,8 @@ Page({
         hour: birthday[4],
         minute: birthday[5],
         second: birthday[6] ?? '00',
-        latitude: latitude.toFixed(2),
-        longitude: longitude.toFixed(2),
+        latitude,
+        longitude,
         timezone: formatTimezone(archive.timezone),
       })
 

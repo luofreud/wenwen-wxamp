@@ -68,7 +68,8 @@ Page({
     navigationRightPadding: 0,
     isLoading: true,
     loadError: '',
-    switchingArchiveId: null as number | null,
+    selectedArchiveId: null as number | null,
+    isConfirming: false,
     archives: [] as ArchiveSwitchItem[],
   },
 
@@ -139,7 +140,14 @@ Page({
 
   syncArchivesFromStore() {
     const snapshot = archiveStore.getSnapshot()
+    const selectedArchiveId = snapshot.archives.some(({ id }) => {
+      return id === this.data.selectedArchiveId
+    })
+      ? this.data.selectedArchiveId
+      : snapshot.selectedArchiveId
+
     this.setData({
+      selectedArchiveId,
       archives: snapshot.archives.map((archive) => {
         const zodiac = getZodiac(archive.birth_time)
 
@@ -147,7 +155,7 @@ Page({
           ...archive,
           birthTimeText: formatBirthTime(archive.birth_time),
           genderLabel: getGenderLabel(archive.gender),
-          isSelected: archive.id === snapshot.selectedArchiveId,
+          isSelected: archive.id === selectedArchiveId,
           zodiacIcon: zodiac.icon,
           zodiacName: zodiac.name,
           zodiacTagClass: zodiac.tagClass,
@@ -161,18 +169,37 @@ Page({
   },
 
   selectArchive(event: ArchiveTapEvent) {
-    if (this.data.switchingArchiveId !== null) return
-
     const archiveId = Number(event.currentTarget.dataset.id)
-    if (!Number.isFinite(archiveId) || !archiveStore.selectArchive(archiveId)) return
+    if (
+      !Number.isFinite(archiveId)
+      || !this.data.archives.some(({ id }) => id === archiveId)
+    ) {
+      return
+    }
 
     this.setData({
-      switchingArchiveId: archiveId,
+      selectedArchiveId: archiveId,
       archives: this.data.archives.map((archive) => ({
         ...archive,
         isSelected: archive.id === archiveId,
       })),
     })
+  },
+
+  addArchive() {
+    wx.navigateTo({ url: '/pages/archives/edit' })
+  },
+
+  confirmSelection() {
+    const archiveId = this.data.selectedArchiveId
+    if (this.data.isConfirming || archiveId === null) return
+    if (!archiveStore.selectArchive(archiveId)) {
+      wx.showToast({ title: '所选档案已不存在', icon: 'none' })
+      void this.loadArchives(false, true)
+      return
+    }
+
+    this.setData({ isConfirming: true })
     wx.showToast({ title: '已切换档案', icon: 'success', duration: 800 })
     setTimeout(() => {
       wx.navigateBack({ delta: 1 })

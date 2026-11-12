@@ -1,0 +1,68 @@
+<view class="city-picker city-picker--{{variant}} custom-class {{disabled ? 'city-picker--disabled' : ''}}">
+  <view
+    class="city-picker__field"
+    hover-class="{{disabled ? 'none' : 'city-picker__field--pressed'}}"
+    bindtap="openPicker"
+    role="button"
+    aria-label="{{label}}，{{displayText}}"
+  >
+    <view class="city-picker__marker" aria-hidden="true">
+      <view class="city-picker__marker-core"></view>
+    </view>
+    <view class="city-picker__content">
+      <text wx:if="{{label}}" class="city-picker__label {{required ? 'city-picker__label--required' : ''}}">{{label}}</text>
+      <text class="city-picker__value {{hasValue ? '' : 'city-picker__value--placeholder'}}">{{displayText}}</text>
+    </view>
+    <view class="city-picker__chevron" aria-hidden="true"></view>
+  </view>
+
+  <view
+    wx:if="{{visible}}"
+    class="city-picker__mask"
+    catchtap="handleCancel"
+    catchtouchmove="preventTouchMove"
+  >
+    <view class="city-picker__panel" catchtap="preventBubble">
+      <view class="city-picker__header">
+        <view
+          class="city-picker__header-action city-picker__header-action--cancel"
+          bindtap="handleCancel"
+          hover-class="city-picker__header-action--pressed"
+          role="button"
+        >取消</view>
+        <view
+          wx:if="{{canUseSameLocation}}"
+          class="city-picker__same-action"
+          bindtap="handleSameLocation"
+          hover-class="city-picker__same-action--pressed"
+          role="button"
+        >{{sameLocationLabel}}</view>
+        <view wx:else class="city-picker__same-placeholder"></view>
+        <view
+          class="city-picker__header-action city-picker__header-action--confirm"
+          bindtap="handleConfirm"
+          hover-class="city-picker__header-action--pressed"
+          role="button"
+        >确定</view>
+      </view>
+
+      <picker-view
+        class="city-picker__wheel"
+        value="{{pickerValue}}"
+        indicator-style="height: 88rpx;"
+        bindchange="handlePickerChange"
+      >
+        <picker-view-column>
+          <view wx:for="{{pickerRange[0]}}" wx:key="*this" class="city-picker__wheel-item">{{item}}</view>
+        </picker-view-column>
+        <picker-view-column>
+          <view wx:for="{{pickerRange[1]}}" wx:key="*this" class="city-picker__wheel-item">{{item}}</view>
+        </picker-view-column>
+        <picker-view-column>
+          <view wx:for="{{pickerRange[2]}}" wx:key="*this" class="city-picker__wheel-item">{{item}}</view>
+        </picker-view-column>
+      </picker-view>
+      <view class="city-picker__safe-area"></view>
+    </view>
+  </view>
+</view>

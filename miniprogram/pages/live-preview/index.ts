@@ -10,7 +10,7 @@ type LiveTimeState = 'upcoming' | 'live' | 'ended'
 const DEFAULT_LIVE_DURATION_MS = 3 * 60 * 60 * 1000
 const liveStateTimerByPage = new WeakMap<object, ReturnType<typeof setInterval>>()
 
-// 预约前申请直播提醒订阅授权；后续可追加第二个提醒模板。
+// 预约前申请课程提醒订阅授权；后续可追加第二个提醒模板。
 const LIVE_REMINDER_TEMPLATE_IDS = [
   'EdGu2lM-BKrA3-cXAxaH0jJpv6N31yWaJ4lxjqHYCSU',
 ]
@@ -42,7 +42,7 @@ const resolveLiveTimeState = (
   return 'live'
 }
 
-// 当前模板同意一次对应开播前两次提醒，因此同意时向服务端声明 2 次。
+// 当前模板同意一次对应课程开始前两次提醒，因此同意时向服务端声明 2 次。
 const getAcceptedSubscriptionCount = (): Promise<0 | 2> => {
   const templateIds = LIVE_REMINDER_TEMPLATE_IDS.slice(0, 2)
   if (templateIds.length === 0) {
@@ -68,7 +68,7 @@ const confirmCancelReservation = (): Promise<boolean> => {
   return new Promise((resolve) => {
     wx.showModal({
       title: '取消预约',
-      content: '确定取消这场直播的预约吗？',
+      content: '确定取消这门课程的预约吗？',
       confirmText: '取消预约',
       confirmColor: '#9b51e0',
       success: (result) => resolve(result.confirm),
@@ -94,7 +94,7 @@ Page({
     if (!eventNo) {
       this.setData({
         isLoading: false,
-        loadError: '缺少直播编号，无法加载直播详情。',
+        loadError: '缺少课程编号，无法加载课程详情。',
       })
       return
     }
@@ -136,7 +136,7 @@ Page({
           liveEvent: null,
           liveStartAtText: '',
           liveTimeState: 'upcoming',
-          loadError: response.msg || '直播详情加载失败',
+          loadError: response.msg || '课程详情加载失败',
         })
         return
       }
@@ -217,7 +217,7 @@ Page({
     const appId = this.data.liveEvent?.mini_program_app_id?.trim() ?? ''
     const path = this.data.liveEvent?.mini_program_path?.trim() ?? ''
     if (!appId || !path) {
-      wx.showToast({ title: '直播小程序暂不可用', icon: 'none' })
+      wx.showToast({ title: '课程页面暂不可用', icon: 'none' })
       return
     }
 
@@ -227,7 +227,7 @@ Page({
       envVersion: 'release',
       fail: (res) => {
         if (res.errMsg === 'navigateToMiniProgram:fail cancel') return
-        wx.showToast({ title: '进入直播间失败', icon: 'none' })
+        wx.showToast({ title: '进入课程失败', icon: 'none' })
       },
     })
   },
@@ -317,7 +317,7 @@ Page({
   onShareAppMessage() {
     const liveEvent = this.data.liveEvent
     return {
-      title: liveEvent?.title ?? '问问星座直播',
+      title: liveEvent?.title ?? '问问星座课程',
       path: liveEvent
         ? `/pages/live-preview/index?id=${encodeURIComponent(liveEvent.event_no)}`
         : '/pages/index/index',

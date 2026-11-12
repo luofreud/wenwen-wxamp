@@ -6,7 +6,7 @@ page {
 
 .switch-page {
   min-height: 100vh;
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(188rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   color: #24222a;
   background:
@@ -63,7 +63,44 @@ page {
 }
 
 .archive-empty {
-  margin: 24rpx;
+  display: flex;
+  align-items: center;
+  margin: 80rpx 24rpx 0;
+  padding: 72rpx 36rpx;
+  border: 1rpx solid rgba(57, 71, 88, 0.08);
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.9);
+  flex-direction: column;
+  text-align: center;
+}
+
+.empty-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88rpx;
+  height: 88rpx;
+  border: 2rpx solid #b9c8d8;
+  border-radius: 50%;
+  color: #526b86;
+  font-size: 44rpx;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.empty-title {
+  margin-top: 28rpx;
+  color: #26313d;
+  font-size: 31rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.empty-copy {
+  margin-top: 12rpx;
+  color: #8a929c;
+  font-size: 24rpx;
+  line-height: 1.6;
 }
 
 .page-intro {
@@ -124,8 +161,7 @@ page {
     0 10rpx 24rpx rgba(50, 124, 242, 0.12);
 }
 
-.archive-card--pressed,
-.archive-card--switching {
+.archive-card--pressed {
   opacity: 0.8;
   transform: scale(0.99);
 }
@@ -343,6 +379,69 @@ page {
 
 .state-button::after {
   border: 0;
+}
+
+.bottom-actions {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  padding: 22rpx 24rpx calc(22rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid rgba(43, 55, 69, 0.08);
+  box-sizing: border-box;
+  background: rgba(250, 251, 253, 0.96);
+  box-shadow: 0 -12rpx 36rpx rgba(43, 55, 69, 0.07);
+}
+
+.bottom-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 92rpx;
+  margin: 0;
+  padding: 0 24rpx;
+  flex: 1;
+  border: 0;
+  border-radius: 46rpx;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 92rpx;
+}
+
+.bottom-button::after {
+  border: 0;
+}
+
+.bottom-button + .bottom-button {
+  margin-left: 20rpx;
+}
+
+.bottom-button--add {
+  border: 2rpx solid #327cf2;
+  color: #327cf2;
+  background: #ffffff;
+}
+
+.bottom-button--confirm {
+  color: #ffffff;
+  background: #327cf2;
+  box-shadow: 0 10rpx 24rpx rgba(50, 124, 242, 0.22);
+}
+
+.bottom-button[disabled] {
+  border-color: #d7dce3;
+  color: #aab1ba;
+  background: #eceff3;
+  box-shadow: none;
+}
+
+.bottom-button--pressed {
+  opacity: 0.78;
+  transform: scale(0.985);
 }
 
 @keyframes skeleton-shimmer {

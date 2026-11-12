@@ -1,7 +1,5 @@
 {
   "enablePullDownRefresh": true,
   "backgroundColor": "#f3f5f9",
-  "usingComponents": {
-    "archive-empty": "/components/archive-empty/index"
-  }
+  "usingComponents": {}
 }

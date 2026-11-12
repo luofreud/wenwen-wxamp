@@ -114,33 +114,26 @@
         </view>
       </view>
 
-      <view
-        class="form-item"
-        bindtap="handleBirthPlaceTap"
-        hover-class="form-item--pressed"
-        role="button"
-        aria-label="选择出生地点"
-      >
-        <text class="field-label field-label--required">出生地点</text>
-        <view class="field-selector">
-          <text class="selector-text {{birthPlaceText ? 'field-value' : 'field-placeholder'}}">{{choosingLocation === 'birth' ? '正在打开地图…' : (birthPlaceText || '地图选点')}}</text>
-          <view class="selector-arrow"></view>
-        </view>
-      </view>
+      <city-cascade-picker
+        label="出生地点"
+        placeholder="请选择"
+        variant="form"
+        required="{{true}}"
+        value="{{birthLocationId}}"
+        location="{{birthLocation}}"
+        bindchange="handleBirthLocationChange"
+      />
 
-      <view
-        class="form-item"
-        bindtap="handleCurrentPlaceTap"
-        hover-class="form-item--pressed"
-        role="button"
-        aria-label="选择现居地"
-      >
-        <text class="field-label field-label--required">现居地</text>
-        <view class="field-selector">
-          <text class="selector-text {{currentPlaceText ? 'field-value' : 'field-placeholder'}}">{{choosingLocation === 'current' ? '正在打开地图…' : (currentPlaceText || '地图选点')}}</text>
-          <view class="selector-arrow"></view>
-        </view>
-      </view>
+      <city-cascade-picker
+        label="现居地"
+        placeholder="请选择"
+        variant="form"
+        required="{{true}}"
+        value="{{currentLocationId}}"
+        location="{{currentLocation}}"
+        same-location="{{birthLocation}}"
+        bindchange="handleCurrentLocationChange"
+      />
 
       <view
         wx:if="{{timezoneError}}"

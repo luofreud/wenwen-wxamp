@@ -149,7 +149,7 @@
   <view wx:if="{{liveEvent}}" class="live-card">
     <image
       class="live-card__background"
-      src="https://xzxyshijin.oss-cn-hangzhou.aliyuncs.com/shuijingTP/live-pre-backgroud.png"
+      src="https://wwysbg.oss-cn-chengdu.aliyuncs.com/tp/24439ed7e5991822ec992b6618f1bf4a.png"
       mode="widthFix"
       aria-hidden="true"
     />
@@ -179,7 +179,7 @@
           class="reserve-button"
           url="{{liveEvent.detailUrl}}"
           hover-class="reserve-button--pressed"
-        >{{liveEvent.isLive || liveEvent.reservation_status === 'reserved' ? '查看直播' : '去预约'}}</navigator>
+        >{{liveEvent.isLive || liveEvent.reservation_status === 'reserved' ? '查看课程' : '去预约'}}</navigator>
       </view>
     </view>
   </view>

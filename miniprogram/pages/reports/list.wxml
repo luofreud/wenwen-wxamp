@@ -1,18 +1,6 @@
 <!-- pages/reports/list.wxml -->
 <view class="reports-page">
-  <view wx:if="{{isInitialLoading}}" class="report-list report-list--skeleton" aria-hidden="true">
-    <view wx:for="{{[1, 2, 3, 4]}}" wx:key="*this" class="more-card report-skeleton">
-      <view class="more-cover skeleton-block"></view>
-      <view class="more-copy">
-        <view class="skeleton-line skeleton-line--title"></view>
-        <view class="skeleton-line skeleton-line--description"></view>
-        <view class="skeleton-line skeleton-line--short"></view>
-      </view>
-      <view class="more-action skeleton-block"></view>
-    </view>
-  </view>
-
-  <view wx:else class="report-list">
+  <view wx:if="{{reports.length > 0}}" class="report-list">
     <view
       wx:for="{{reports}}"
       wx:key="id"
@@ -39,16 +27,8 @@
     </view>
   </view>
 
-  <view wx:if="{{isLoadingMore}}" class="loading-more">
-    <view class="loading-dot loading-dot--1"></view>
-    <view class="loading-dot loading-dot--2"></view>
-    <view class="loading-dot loading-dot--3"></view>
-    <text>正在加载更多报告</text>
-  </view>
-
-  <view wx:elif="{{!isInitialLoading && !hasMore && reports.length > 0}}" class="list-end">
-    <view class="list-end__line"></view>
-    <text>所有报告都在这里了</text>
-    <view class="list-end__line"></view>
+  <view wx:else class="empty-state">
+    <text class="empty-state__title">暂无报告</text>
+    <text class="empty-state__description">完成测评后，生成的报告会展示在这里</text>
   </view>
 </view>

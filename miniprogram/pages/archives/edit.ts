@@ -27,6 +27,22 @@ interface SwitchChangeEvent {
   }
 }
 
+interface ArchiveLocationValue {
+  value: number
+  text: string
+  longitude: number
+  latitude: number
+}
+
+interface CityCascadeChangeEvent {
+  detail: {
+    value: number
+    path: string
+    longitude: number | null
+    latitude: number | null
+  }
+}
+
 interface GenderTapEvent {
   currentTarget: {
     dataset: {
@@ -117,10 +133,13 @@ Page({
     birthPlaceText: '',
     birthLongitude: null as number | null,
     birthLatitude: null as number | null,
+    birthLocationId: 0,
+    birthLocation: null as ArchiveLocationValue | null,
     currentPlaceText: '',
     currentLongitude: null as number | null,
     currentLatitude: null as number | null,
-    choosingLocation: '' as 'birth' | 'current' | '',
+    currentLocationId: 0,
+    currentLocation: null as ArchiveLocationValue | null,
     timezoneOptions: [] as TimezoneOption[],
     timezoneIndex: 0,
     timezoneValue: null as number | null,
@@ -280,9 +299,23 @@ Page({
       birthPlaceText: archive.birth_place,
       birthLongitude: archive.birth_longitude,
       birthLatitude: archive.birth_latitude,
+      birthLocationId: 0,
+      birthLocation: {
+        value: 0,
+        text: archive.birth_place,
+        longitude: archive.birth_longitude,
+        latitude: archive.birth_latitude,
+      },
       currentPlaceText: archive.current_place,
       currentLongitude: archive.current_longitude,
       currentLatitude: archive.current_latitude,
+      currentLocationId: 0,
+      currentLocation: {
+        value: 0,
+        text: archive.current_place,
+        longitude: archive.current_longitude,
+        latitude: archive.current_latitude,
+      },
       timezoneIndex,
       timezoneValue,
       timezoneLabel: timezoneOption?.label
@@ -320,63 +353,36 @@ Page({
     this.setData({ birthTime: event.detail.value })
   },
 
-  handleBirthPlaceTap() {
-    this.chooseArchiveLocation('birth')
-  },
-
-  handleCurrentPlaceTap() {
-    this.chooseArchiveLocation('current')
-  },
-
-  chooseArchiveLocation(locationType: 'birth' | 'current') {
-    if (this.data.choosingLocation) return
-
-    const isBirth = locationType === 'birth'
-    const latitude = isBirth
-      ? this.data.birthLatitude
-      : this.data.currentLatitude
-    const longitude = isBirth
-      ? this.data.birthLongitude
-      : this.data.currentLongitude
-    const options: WechatMiniprogram.ChooseLocationOption = {
-      success: (result) => {
-        const placeText = result.address.trim() || result.name.trim()
-        if (!placeText) {
-          wx.showToast({ title: '未获取到地点信息，请重新选择', icon: 'none' })
-          return
-        }
-
-        if (isBirth) {
-          this.setData({
-            birthPlaceText: placeText,
-            birthLongitude: result.longitude,
-            birthLatitude: result.latitude,
-          })
-          return
-        }
-
-        this.setData({
-          currentPlaceText: placeText,
-          currentLongitude: result.longitude,
-          currentLatitude: result.latitude,
-        })
-      },
-      fail: (error) => {
-        if (error.errMsg.includes('cancel')) return
-        wx.showToast({ title: '打开地图失败，请稍后重试', icon: 'none' })
-      },
-      complete: () => {
-        this.setData({ choosingLocation: '' })
-      },
+  handleBirthLocationChange(event: CityCascadeChangeEvent) {
+    const { value, path, longitude, latitude } = event.detail
+    if (longitude === null || latitude === null) {
+      wx.showToast({ title: '该地区暂无坐标信息', icon: 'none' })
+      return
     }
 
-    if (latitude !== null && longitude !== null) {
-      options.latitude = latitude
-      options.longitude = longitude
+    this.setData({
+      birthPlaceText: path,
+      birthLongitude: longitude,
+      birthLatitude: latitude,
+      birthLocationId: value,
+      birthLocation: { value, text: path, longitude, latitude },
+    })
+  },
+
+  handleCurrentLocationChange(event: CityCascadeChangeEvent) {
+    const { value, path, longitude, latitude } = event.detail
+    if (longitude === null || latitude === null) {
+      wx.showToast({ title: '该地区暂无坐标信息', icon: 'none' })
+      return
     }
 
-    this.setData({ choosingLocation: locationType })
-    wx.chooseLocation(options)
+    this.setData({
+      currentPlaceText: path,
+      currentLongitude: longitude,
+      currentLatitude: latitude,
+      currentLocationId: value,
+      currentLocation: { value, text: path, longitude, latitude },
+    })
   },
 
   handleTimezoneChange(event: PickerChangeEvent) {
@@ -431,7 +437,7 @@ Page({
       return null
     }
     if (birthLongitude === null || birthLatitude === null) {
-      wx.showToast({ title: '请在地图中选择出生地点', icon: 'none' })
+      wx.showToast({ title: '请选择有效的出生地点', icon: 'none' })
       return null
     }
     if (
@@ -450,7 +456,7 @@ Page({
       return null
     }
     if (currentLongitude === null || currentLatitude === null) {
-      wx.showToast({ title: '请在地图中选择现居地', icon: 'none' })
+      wx.showToast({ title: '请选择有效的现居地', icon: 'none' })
       return null
     }
     if (

@@ -36,19 +36,21 @@
   </view>
 
   <view wx:elif="{{archives.length === 0}}" class="archive-empty">
-    <archive-empty />
+    <view class="empty-symbol">＋</view>
+    <text class="empty-title">还没有档案</text>
+    <text class="empty-copy">添加一份档案后，就可以在这里选择</text>
   </view>
 
   <view wx:else class="archive-list">
     <view
       wx:for="{{archives}}"
       wx:key="id"
-      class="archive-card {{item.isSelected ? 'archive-card--selected' : ''}} {{switchingArchiveId === item.id ? 'archive-card--switching' : ''}}"
+      class="archive-card {{item.isSelected ? 'archive-card--selected' : ''}}"
       data-id="{{item.id}}"
       bindtap="selectArchive"
       hover-class="archive-card--pressed"
       role="button"
-      aria-label="{{item.isSelected ? '当前档案' : '切换到'}}{{item.name}}"
+      aria-label="{{item.isSelected ? '已选择' : '选择'}}{{item.name}}"
     >
       <view class="archive-copy">
         <view class="archive-heading">
@@ -72,5 +74,21 @@
         <view wx:if="{{item.isSelected}}" class="selection-check"></view>
       </view>
     </view>
+  </view>
+
+  <view class="bottom-actions">
+    <button
+      class="bottom-button bottom-button--add"
+      hover-class="bottom-button--pressed"
+      disabled="{{isConfirming}}"
+      bindtap="addArchive"
+    >添加档案</button>
+    <button
+      class="bottom-button bottom-button--confirm"
+      hover-class="bottom-button--pressed"
+      loading="{{isConfirming}}"
+      disabled="{{isLoading || archives.length === 0 || selectedArchiveId === null || isConfirming}}"
+      bindtap="confirmSelection"
+    >确认选择</button>
   </view>
 </view>

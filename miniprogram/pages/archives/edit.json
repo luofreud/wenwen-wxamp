@@ -1,3 +1,5 @@
 {
-  "usingComponents": {}
+  "usingComponents": {
+    "city-cascade-picker": "/components/city-cascade-picker/index"
+  }
 }

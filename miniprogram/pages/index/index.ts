@@ -142,13 +142,13 @@ function formatDate(value: Date): string {
 
 function formatLiveStartTime(value: string): string {
   const date = new Date(value)
-  if (!Number.isFinite(date.getTime())) return '直播时间待公布'
+  if (!Number.isFinite(date.getTime())) return '课程时间待公布'
 
   const month = date.getMonth() + 1
   const day = date.getDate()
   const hour = String(date.getHours()).padStart(2, '0')
   const minute = String(date.getMinutes()).padStart(2, '0')
-  return `${month}月${day}日 ${hour}:${minute} 开播`
+  return `${month}月${day}日 ${hour}:${minute} 开始`
 }
 
 function isLiveNow(

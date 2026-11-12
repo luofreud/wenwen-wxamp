@@ -14,7 +14,7 @@ Page({
     }
 
     if (!/^https:\/\//i.test(url)) {
-      wx.showToast({ title: '直播链接无效', icon: 'none' })
+      wx.showToast({ title: '课程链接无效', icon: 'none' })
       wx.navigateBack()
       return
     }
