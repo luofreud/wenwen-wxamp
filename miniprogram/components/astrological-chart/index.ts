@@ -1428,6 +1428,31 @@ Component({
 
     stopPropagation() {},
 
+    openParameters() {
+      const payload = requestRuntimeByInstance.get(this)?.payload
+      const archive = archiveStore.selectedArchive
+      if (!payload || !archive) {
+        wx.showToast({
+          title: '星盘参数暂不可用',
+          icon: 'none',
+        })
+        return
+      }
+
+      wx.navigateTo({
+        url: '/pages/astrolabe-parameters/index',
+        success: ({ eventChannel }) => {
+          eventChannel.emit('astrolabeParametersData', { archive, payload })
+        },
+        fail: () => {
+          wx.showToast({
+            title: '页面打开失败，请稍后重试',
+            icon: 'none',
+          })
+        },
+      })
+    },
+
     openStyleSheet() {
       this.setData({ styleSheetVisible: true })
     },

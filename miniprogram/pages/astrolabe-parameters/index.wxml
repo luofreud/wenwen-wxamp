@@ -1,0 +1,130 @@
+<view wx:if="{{navigationReady}}" class="parameters-page">
+  <view
+    class="navigation-bar"
+    style="height: {{navigationBarHeight}}px; padding-top: {{statusBarHeight}}px;"
+  >
+    <navigator
+      class="back-action"
+      open-type="navigateBack"
+      delta="1"
+      hover-class="navigation-action--pressed"
+      aria-label="返回"
+    >
+      <view class="back-icon"></view>
+    </navigator>
+    <text class="navigation-title">星盘参数</text>
+    <view class="navigation-placeholder"></view>
+  </view>
+
+  <view wx:if="{{loadState === 'loading'}}" class="page-state" aria-label="星盘参数加载中">
+    <view class="state-spinner"></view>
+    <text class="state-copy">正在整理星盘参数…</text>
+  </view>
+
+  <view wx:elif="{{loadState === 'error'}}" class="page-state">
+    <view class="state-symbol">!</view>
+    <text class="state-title">参数暂时没有加载出来</text>
+    <text class="state-copy">{{errorMessage}}</text>
+    <navigator
+      class="state-button"
+      open-type="navigateBack"
+      delta="1"
+      hover-class="state-button--pressed"
+    >返回星盘</navigator>
+  </view>
+
+  <view wx:else class="parameters-content">
+    <view class="profile-header">
+      <image
+        class="profile-avatar"
+        src="{{profile.zodiacIcon}}"
+        mode="aspectFit"
+        aria-label="{{profile.zodiacName}}"
+      />
+      <view class="profile-copy">
+        <text class="profile-name">{{profile.name}}</text>
+        <text class="profile-meta">出生时间：{{profile.birthTime}}</text>
+        <text class="profile-meta profile-meta--place">出生地：{{profile.birthPlace}}</text>
+      </view>
+    </view>
+
+    <view wx:if="{{planetRows.length}}" class="parameter-section">
+      <text class="section-title">行星信息</text>
+      <view class="parameter-table body-table">
+        <view class="table-row table-row--header table-row--planet">
+          <text class="table-cell">星体</text>
+          <text class="table-cell">星座度数</text>
+          <text class="table-cell">宫位</text>
+          <text class="table-cell">状态</text>
+        </view>
+        <view wx:for="{{planetRows}}" wx:key="id" class="table-row table-row--body">
+          <view class="table-cell body-name-cell">
+            <text class="body-glyph" style="color: {{item.color}};">{{item.glyph}}</text>
+            <text class="cell-text body-name">{{item.name}}</text>
+          </view>
+          <text class="table-cell cell-text cell-text--secondary">{{item.position}}</text>
+          <text class="table-cell cell-text cell-text--secondary">{{item.house}}</text>
+          <text class="table-cell cell-text">{{item.status}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{asteroidRows.length}}" class="parameter-section">
+      <text class="section-title">小行星信息</text>
+      <view class="parameter-table body-table">
+        <view class="table-row table-row--header table-row--asteroid">
+          <text class="table-cell">星体</text>
+          <text class="table-cell">星座度数</text>
+          <text class="table-cell">宫位</text>
+          <text class="table-cell">状态</text>
+        </view>
+        <view wx:for="{{asteroidRows}}" wx:key="id" class="table-row table-row--body">
+          <view class="table-cell body-name-cell">
+            <text class="body-glyph" style="color: {{item.color}};">{{item.glyph}}</text>
+            <text class="cell-text body-name">{{item.name}}</text>
+          </view>
+          <text class="table-cell cell-text cell-text--secondary">{{item.position}}</text>
+          <text class="table-cell cell-text cell-text--secondary">{{item.house}}</text>
+          <text class="table-cell cell-text">{{item.status}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{virtualPointRows.length}}" class="parameter-section">
+      <text class="section-title">虚点信息</text>
+      <view class="parameter-table body-table">
+        <view class="table-row table-row--header table-row--virtual">
+          <text class="table-cell">星体</text>
+          <text class="table-cell">星座度数</text>
+          <text class="table-cell">宫位</text>
+          <text class="table-cell">状态</text>
+        </view>
+        <view wx:for="{{virtualPointRows}}" wx:key="id" class="table-row table-row--body">
+          <view class="table-cell body-name-cell">
+            <text class="body-glyph" style="color: {{item.color}};">{{item.glyph}}</text>
+            <text class="cell-text body-name">{{item.name}}</text>
+          </view>
+          <text class="table-cell cell-text cell-text--secondary">{{item.position}}</text>
+          <text class="table-cell cell-text cell-text--secondary">{{item.house}}</text>
+          <text class="table-cell cell-text">{{item.status}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{aspectRows.length}}" class="parameter-section">
+      <text class="section-title">星体相位</text>
+      <view class="parameter-table aspect-table">
+        <view class="table-row table-row--header table-row--aspect">
+          <text class="table-cell">星体</text>
+          <text class="table-cell">相位</text>
+          <text class="table-cell">容许度</text>
+        </view>
+        <view wx:for="{{aspectRows}}" wx:key="id" class="table-row table-row--body table-row--aspect">
+          <text class="table-cell cell-text">{{item.bodies}}</text>
+          <text class="table-cell cell-text">{{item.aspect}}</text>
+          <text class="table-cell cell-text">{{item.orb}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

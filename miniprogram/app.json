@@ -8,7 +8,8 @@
     "pages/archives/index",
     "pages/archives/edit",
     "pages/archives/switch",
-    "pages/reports/list"
+    "pages/reports/list",
+    "pages/astrolabe-parameters/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",
