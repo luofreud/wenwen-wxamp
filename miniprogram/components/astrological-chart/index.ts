@@ -650,7 +650,7 @@ Component({
         if (!currentRuntime || currentRuntime.requestId !== requestId) return
         if (!showLoading && currentRuntime.payload) {
           wx.showToast({
-            title: errorMessage(error, '星盘切换失败，请稍后重试'),
+            title: errorMessage(error, '星图切换失败，请稍后重试'),
             icon: 'none',
           })
           return
@@ -805,7 +805,7 @@ Component({
     exportChartImage(): Promise<string> {
       const runtime = runtimeByInstance.get(this)
       if (!runtime || this.data.chartLoadState !== 'ready') {
-        return Promise.reject(new Error('星盘尚未生成完成'))
+        return Promise.reject(new Error('星图尚未生成完成'))
       }
 
       if (runtime.drawTimer !== null) {
@@ -1012,7 +1012,7 @@ Component({
       radius: number,
       uiScale: number,
     ) {
-      const characters = Array.from('问问星盘')
+      const characters = Array.from('问问星图')
       const brandRadius = radius + 14.5 * uiScale
       const startAngle = 216.7
       const angleStep = 6
@@ -1433,7 +1433,7 @@ Component({
       const archive = archiveStore.selectedArchive
       if (!payload || !archive) {
         wx.showToast({
-          title: '星盘参数暂不可用',
+          title: '星图参数暂不可用',
           icon: 'none',
         })
         return

@@ -12,13 +12,13 @@
     >
       <view class="back-icon"></view>
     </navigator>
-    <text class="navigation-title">星盘参数</text>
+    <text class="navigation-title">星图参数</text>
     <view class="navigation-placeholder"></view>
   </view>
 
-  <view wx:if="{{loadState === 'loading'}}" class="page-state" aria-label="星盘参数加载中">
+  <view wx:if="{{loadState === 'loading'}}" class="page-state" aria-label="星图参数加载中">
     <view class="state-spinner"></view>
-    <text class="state-copy">正在整理星盘参数…</text>
+    <text class="state-copy">正在整理星图参数…</text>
   </view>
 
   <view wx:elif="{{loadState === 'error'}}" class="page-state">
@@ -30,16 +30,15 @@
       open-type="navigateBack"
       delta="1"
       hover-class="state-button--pressed"
-    >返回星盘</navigator>
+    >返回星图</navigator>
   </view>
 
   <view wx:else class="parameters-content">
     <view class="profile-header">
-      <image
+      <zodiac-avatar
         class="profile-avatar"
-        src="{{profile.zodiacIcon}}"
-        mode="aspectFit"
-        aria-label="{{profile.zodiacName}}"
+        zodiac="{{profile.zodiac}}"
+        label="{{profile.zodiacName}}"
       />
       <view class="profile-copy">
         <text class="profile-name">{{profile.name}}</text>
@@ -126,5 +125,18 @@
         </view>
       </view>
     </view>
+  </view>
+  <view wx:if="{{loadState === 'ready'}}" class="share-toolbar">
+    <button
+      class="share-button"
+      bindtap="shareParametersImage"
+      disabled="{{isSharing}}"
+      loading="{{isSharing}}"
+      hover-class="share-button--pressed"
+      aria-label="将完整星图参数生成为图片并分享"
+    >
+      <image wx:if="{{!isSharing}}" class="share-icon" src="/assets/icons/share.png" mode="aspectFit" />
+      <text>{{isSharing ? '正在生成长图…' : '分享长图'}}</text>
+    </button>
   </view>
 </view>

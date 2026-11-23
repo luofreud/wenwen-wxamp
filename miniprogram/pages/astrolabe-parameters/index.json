@@ -1,5 +1,8 @@
 {
+  "title": "星图参数",
   "navigationStyle": "custom",
   "backgroundColor": "#ffffff",
-  "usingComponents": {}
+  "usingComponents": {
+    "zodiac-avatar": "/components/zodiac-avatar/index"
+  }
 }

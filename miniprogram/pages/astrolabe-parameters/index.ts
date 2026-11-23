@@ -1,4 +1,7 @@
 import type { Archive } from '../../services/index'
+import type { ZodiacSign } from '../../components/zodiac-avatar/images'
+import { exportParametersImage } from '../../utils/astrolabe-parameters-image'
+import type { ProfileView, BodyRow, AspectRow } from '../../utils/astrolabe-parameters-image'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -51,34 +54,9 @@ interface ParametersTransfer {
   payload: ChartPayload
 }
 
-interface ProfileView {
-  name: string
-  birthTime: string
-  birthPlace: string
-  zodiacIcon: string
-  zodiacName: string
-}
-
-interface BodyRow {
-  id: string
-  glyph: string
-  name: string
-  color: string
-  position: string
-  house: string
-  status: string
-}
-
-interface AspectRow {
-  id: string
-  bodies: string
-  aspect: string
-  orb: string
-}
-
 interface ZodiacInfo {
   end: number
-  icon: string
+  sign: ZodiacSign
   name: string
 }
 
@@ -125,19 +103,19 @@ const ASPECT_LABELS: Record<number, string> = {
 }
 
 const ZODIAC_SIGNS: ZodiacInfo[] = [
-  { end: 120, icon: '/assets/constellation/capricorn.svg', name: '摩羯座' },
-  { end: 219, icon: '/assets/constellation/aquarius.svg', name: '水瓶座' },
-  { end: 320, icon: '/assets/constellation/pisces.svg', name: '双鱼座' },
-  { end: 420, icon: '/assets/constellation/aries.svg', name: '白羊座' },
-  { end: 521, icon: '/assets/constellation/taurus.svg', name: '金牛座' },
-  { end: 622, icon: '/assets/constellation/gemini.svg', name: '双子座' },
-  { end: 723, icon: '/assets/constellation/cancer.svg', name: '巨蟹座' },
-  { end: 823, icon: '/assets/constellation/leo.svg', name: '狮子座' },
-  { end: 923, icon: '/assets/constellation/virgo.svg', name: '处女座' },
-  { end: 1024, icon: '/assets/constellation/libra.svg', name: '天秤座' },
-  { end: 1123, icon: '/assets/constellation/scorpio.svg', name: '天蝎座' },
-  { end: 1222, icon: '/assets/constellation/sagittarius.svg', name: '射手座' },
-  { end: 1231, icon: '/assets/constellation/capricorn.svg', name: '摩羯座' },
+  { end: 120, sign: 'capricorn', name: '摩羯座' },
+  { end: 219, sign: 'aquarius', name: '水瓶座' },
+  { end: 320, sign: 'pisces', name: '双鱼座' },
+  { end: 420, sign: 'aries', name: '白羊座' },
+  { end: 521, sign: 'taurus', name: '金牛座' },
+  { end: 622, sign: 'gemini', name: '双子座' },
+  { end: 723, sign: 'cancer', name: '巨蟹座' },
+  { end: 823, sign: 'leo', name: '狮子座' },
+  { end: 923, sign: 'virgo', name: '处女座' },
+  { end: 1024, sign: 'libra', name: '天秤座' },
+  { end: 1123, sign: 'scorpio', name: '天蝎座' },
+  { end: 1222, sign: 'sagittarius', name: '射手座' },
+  { end: 1231, sign: 'capricorn', name: '摩羯座' },
 ]
 
 function emptyProfile(): ProfileView {
@@ -145,7 +123,7 @@ function emptyProfile(): ProfileView {
     name: '',
     birthTime: '',
     birthPlace: '',
-    zodiacIcon: '',
+    zodiac: 'capricorn',
     zodiacName: '',
   }
 }
@@ -219,6 +197,7 @@ Page({
     statusBarHeight: 0,
     loadState: 'loading' as LoadState,
     errorMessage: '',
+    isSharing: false,
     profile: emptyProfile(),
     planetRows: [] as BodyRow[],
     asteroidRows: [] as BodyRow[],
@@ -237,7 +216,7 @@ Page({
       if (this.data.loadState === 'loading') {
         this.setData({
           loadState: 'error',
-          errorMessage: '没有读取到星盘参数，请返回星盘后重试。',
+          errorMessage: '没有读取到星图参数，请返回星图后重试。',
         })
       }
     }, 800)
@@ -268,11 +247,38 @@ Page({
     }
   },
 
+  async shareParametersImage(): Promise<void> {
+    if (this.data.isSharing || this.data.loadState !== 'ready') return
+    this.setData({ isSharing: true })
+    wx.showLoading({ title: '正在生成长图', mask: true })
+    try {
+      const path = await exportParametersImage(this.data)
+      wx.hideLoading()
+      if (wx.canIUse('showShareImageMenu')) {
+        await wx.showShareImageMenu({ path, needShowEntrance: false })
+      } else {
+        await wx.previewImage({ current: path, urls: [path] })
+      }
+    } catch (error) {
+      wx.hideLoading()
+      const message = error instanceof Error ? error.message
+        : (error as WechatMiniprogram.GeneralCallbackResult | null)?.errMsg ?? ''
+      if (!message.toLowerCase().includes('cancel')) {
+        console.warn('分享星图参数长图失败', error)
+        const title = message.includes('not supported') || message.includes('initScl')
+          ? '请在手机微信中使用图片分享' : '生成或分享长图失败，请重试'
+        wx.showToast({ title, icon: 'none' })
+      }
+    } finally {
+      this.setData({ isSharing: false })
+    }
+  },
+
   applyTransfer({ archive, payload }: ParametersTransfer) {
     if (!archive || !payload || !Array.isArray(payload.planet)) {
       this.setData({
         loadState: 'error',
-        errorMessage: '星盘参数数据无效，请返回重试。',
+        errorMessage: '星图参数数据无效，请返回重试。',
       })
       return
     }
@@ -317,7 +323,7 @@ Page({
         name: archive.name.trim(),
         birthTime: formatBirthTime(archive.birth_time),
         birthPlace: archive.birth_place.trim(),
-        zodiacIcon: zodiac.icon,
+        zodiac: zodiac.sign,
         zodiacName: zodiac.name,
       },
       planetRows,

@@ -62,7 +62,9 @@ page {
 }
 
 .parameters-content {
-  padding: 40rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+  // Reserve the floating toolbar height and an extra gap above it.
+  padding: 40rpx 32rpx 136rpx;
+  padding-bottom: calc(136rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 
@@ -74,10 +76,70 @@ page {
   box-sizing: border-box;
 }
 
+.share-toolbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: 100%;
+  padding: 20rpx 32rpx 0;
+  padding-bottom: calc(env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 -8rpx 24rpx rgba(33, 25, 52, 0.06);
+}
+
+.share-toolbar .share-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: 80rpx;
+  margin: 0;
+  padding: 0 32rpx;
+  border-radius: 40rpx;
+  color: #ffffff;
+  background: #7543df;
+  box-shadow: 0 8rpx 24rpx rgba(117, 67, 223, 0.18);
+  box-sizing: border-box;
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 80rpx;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.share-button::after {
+  border: 0;
+}
+
+.share-button[disabled] {
+  color: rgba(255, 255, 255, 0.85);
+  background: #a68adf;
+  box-shadow: none;
+}
+
+.share-button--pressed {
+  opacity: 0.88;
+  transform: translateY(2rpx);
+}
+
+.share-icon {
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 16rpx;
+  flex: none;
+  filter: brightness(0) invert(1);
+}
+
 .profile-avatar {
+  display: block;
   width: 128rpx;
   height: 128rpx;
   flex: none;
+  overflow: hidden;
   border-radius: 50%;
   background: #f1f2f5;
 }

@@ -1,0 +1,6 @@
+<image
+  class="zodiac-avatar"
+  src="{{avatarSrc}}"
+  mode="aspectFit"
+  aria-label="{{label}}"
+/>

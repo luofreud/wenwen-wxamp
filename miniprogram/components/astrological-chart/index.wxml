@@ -86,7 +86,7 @@
       wx:if="{{chartLoadState === 'ready'}}"
       class="corner-control corner-control--parameters"
       bindtap="openParameters"
-      aria-label="查看星盘参数"
+      aria-label="查看星图参数"
     >
       <image class="corner-control__icon" src="/assets/icons/astrolabe/parameter-icon.png" mode="aspectFit" />
       <text class="corner-control__label">参数</text>
