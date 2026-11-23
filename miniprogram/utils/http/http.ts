@@ -82,5 +82,9 @@ const http = <T = unknown>({
 
 const logout = (): Promise<void> => client.logout()
 
-export { http, logout }
+const upload = <T = unknown>(url: string, filePath: string): Promise<ApiResponse<T>> => {
+  return client.upload<ApiResponse<T>>(url, filePath)
+}
+
+export { http, logout, upload }
 export type { ApiResponse, HttpMethod, HttpParams }

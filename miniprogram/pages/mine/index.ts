@@ -3,7 +3,6 @@ import type {
   CheckInStatus,
   RewardCycleItem,
   RewardMilestone,
-  UpdateUserProfileParams,
   UserProfile,
 } from '../../services/index'
 import { checkInStore, userProfileStore } from '../../stores/index'
@@ -12,14 +11,12 @@ import type {
   UserProfileState,
 } from '../../stores/index'
 
-interface GetUserInfoEvent {
-  detail: {
-    errMsg: string
-    userInfo?: {
-      avatarUrl: string
-      nickName: string
-    }
-  }
+interface ChooseAvatarEvent {
+  detail: { avatarUrl: string }
+}
+
+interface ProfileSubmitEvent {
+  detail: { value: { nickname?: string } }
 }
 
 interface CheckInDayView extends RewardCycleItem {
@@ -55,9 +52,7 @@ interface MinePageRuntime {
   unsubscribeProfile: () => void
 }
 
-const hasText = (value: string | null): boolean => {
-  return Boolean(value?.trim())
-}
+const DEFAULT_WECHAT_AVATAR = 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132'
 
 const PROFILE_ZODIACS: ProfileZodiac[] = [
   { end: 120, name: '摩羯座', icon: '/assets/constellation/capricorn.svg', tone: 'blue' },
@@ -163,8 +158,15 @@ Page({
     isProfileLoading: true,
     isProfileUpdating: false,
     profileError: '',
-    isProfileEmpty: false,
     needsWechatInfo: false,
+    displayAvatar: '',
+    displayNickname: '',
+    isProfileEditorOpen: false,
+    isSavingProfile: false,
+    draftAvatar: '',
+    draftAvatarPath: '',
+    draftNickname: '',
+    profileEditorError: '',
     profileZodiac: '',
     profileZodiacIcon: '',
     profileZodiacTone: 'blue' as ProfileZodiac['tone'],
@@ -233,14 +235,18 @@ Page({
   },
 
   setProfile(profile: UserProfile): void {
-    const hasAvatar = hasText(profile.avatar)
-    const hasNickname = hasText(profile.nickname)
-    const hasBirthDate = hasText(profile.birth_date)
+    const avatar = (profile.avatar_url || profile.avatar || '').trim()
+    const displayAvatar = avatar.split('?')[0] === DEFAULT_WECHAT_AVATAR ? '' : avatar
+    const nickname = (profile.nickname || '').trim()
+    const displayNickname = nickname === '微信用户' ? '' : nickname
+    const hasAvatar = Boolean(displayAvatar)
+    const hasNickname = Boolean(displayNickname)
     const zodiac = getProfileZodiac(profile.birth_date)
 
     this.setData({
       profile,
-      isProfileEmpty: !hasAvatar && !hasNickname && !hasBirthDate,
+      displayAvatar,
+      displayNickname,
       needsWechatInfo: !hasAvatar || !hasNickname,
       profileZodiac: zodiac?.name ?? '',
       profileZodiacIcon: zodiac?.icon ?? '',
@@ -254,7 +260,8 @@ Page({
     } else {
       this.setData({
         profile: null,
-        isProfileEmpty: false,
+        displayAvatar: '',
+        displayNickname: '',
         needsWechatInfo: false,
         profileZodiac: '',
         profileZodiacIcon: '',
@@ -295,41 +302,62 @@ Page({
     })
   },
 
-  handleGetUserInfo(event: GetUserInfoEvent) {
-    const userInfo = event.detail.userInfo
-    if (!event.detail.errMsg.endsWith(':ok') || !userInfo) {
-      wx.showToast({ title: '你取消了微信资料授权', icon: 'none' })
-      return
-    }
-
-    const params: UpdateUserProfileParams = {}
-    const avatar = userInfo.avatarUrl.trim()
-    const nickname = userInfo.nickName.trim()
-    if (avatar) params.avatar = avatar
-    if (nickname) params.nickname = nickname
-
-    if (Object.keys(params).length === 0) {
-      wx.showToast({ title: '没有获取到头像和昵称', icon: 'none' })
-      return
-    }
-
-    void this.saveUserProfile(params, '微信资料已同步')
+  openProfileEditor() {
+    if (!this.data.profile || this.data.isProfileUpdating) return
+    this.setData({
+      isProfileEditorOpen: true,
+      draftAvatar: this.data.displayAvatar,
+      draftAvatarPath: '',
+      draftNickname: this.data.displayNickname,
+      profileEditorError: '',
+    })
   },
 
-  async saveUserProfile(
-    params: UpdateUserProfileParams,
-    successMessage: string,
-  ): Promise<void> {
-    if (userProfileStore.getSnapshot().isUpdating) return
+  closeProfileEditor() {
+    if (this.data.isSavingProfile) return
+    this.setData({ isProfileEditorOpen: false })
+  },
 
+  preventProfileEditorTap() {},
+
+  handleChooseProfileAvatar(event: ChooseAvatarEvent) {
+    if (this.data.isSavingProfile || this.data.isProfileUpdating) return
+    if (!event.detail.avatarUrl?.trim()) return
+    this.openProfileEditor()
+    this.handleChooseAvatar(event)
+  },
+
+  handleChooseAvatar(event: ChooseAvatarEvent) {
+    if (this.data.isSavingProfile) return
+    const path = event.detail.avatarUrl?.trim()
+    if (path) this.setData({ draftAvatar: path, draftAvatarPath: path, profileEditorError: '' })
+  },
+
+  async submitProfile(event: ProfileSubmitEvent): Promise<void> {
+    if (this.data.isSavingProfile || userProfileStore.getSnapshot().isUpdating) return
+    const nickname = (event.detail.value.nickname || '').trim()
+    this.setData({ draftNickname: nickname })
+    if (!nickname) {
+      this.setData({ profileEditorError: '请填写昵称' })
+      return
+    }
+    this.setData({ isSavingProfile: true, profileEditorError: '' })
     try {
-      await userProfileStore.update(params)
-      wx.showToast({ title: successMessage, icon: 'success' })
+      if (this.data.draftAvatarPath) {
+        await userProfileStore.uploadAvatar(this.data.draftAvatarPath)
+        this.setData({ draftAvatarPath: '' })
+      }
+      if (nickname !== this.data.profile?.nickname?.trim()) {
+        await userProfileStore.update({ nickname })
+      }
+      this.setData({ isProfileEditorOpen: false })
+      wx.showToast({ title: '资料已更新', icon: 'success' })
     } catch (error) {
-      wx.showToast({
-        title: error instanceof Error ? error.message : '资料更新失败，请重试',
-        icon: 'none',
+      this.setData({
+        profileEditorError: error instanceof Error ? error.message : '资料保存失败，请重试',
       })
+    } finally {
+      this.setData({ isSavingProfile: false })
     }
   },
 

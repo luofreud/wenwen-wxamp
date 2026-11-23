@@ -1,4 +1,5 @@
-import { getUserProfile, updateUserProfile } from '../services/user-profile'
+import { getUserProfile, updateUserProfile, uploadUserAvatar } from '../services/user-profile'
+import type { ApiResponse } from '../utils/http/index'
 import type {
   UpdateUserProfileParams,
   UserProfile,
@@ -23,6 +24,7 @@ const isUserProfile = (value: unknown): value is UserProfile => {
   const profile = value as Record<string, unknown>
   return (
     isNullableString(profile.avatar) &&
+    (profile.avatar_url === undefined || typeof profile.avatar_url === 'string') &&
     isNullableString(profile.nickname) &&
     isNullableString(profile.birth_date)
   )
@@ -105,7 +107,15 @@ class UserProfileStore {
   update(params: UpdateUserProfileParams): Promise<UserProfile> {
     if (this.updatePromise) return this.updatePromise
 
-    const request = this.runUpdate(params)
+    const request = this.runUpdate(() => updateUserProfile(params))
+    this.updatePromise = request
+    return request
+  }
+
+  uploadAvatar(filePath: string): Promise<UserProfile> {
+    if (this.updatePromise) return this.updatePromise
+
+    const request = this.runUpdate(() => uploadUserAvatar(filePath))
     this.updatePromise = request
     return request
   }
@@ -123,14 +133,14 @@ class UserProfileStore {
     this.notify()
   }
 
-  private async runUpdate(params: UpdateUserProfileParams): Promise<UserProfile> {
+  private async runUpdate(requestProfile: () => Promise<ApiResponse<UserProfile>>): Promise<UserProfile> {
     this.state.isUpdating = true
     this.notify()
 
     try {
       if (this.refreshPromise) await this.refreshPromise
 
-      const response = await updateUserProfile(params)
+      const response = await requestProfile()
       if (response.code !== 200) {
         throw new Error(response.msg || '资料更新失败，请重试')
       }

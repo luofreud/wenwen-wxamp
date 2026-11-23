@@ -1,5 +1,5 @@
 type RequestOptions = WechatMiniprogram.RequestOption
-type RequestResponse = WechatMiniprogram.RequestSuccessCallbackResult
+type RequestResponse = Pick<WechatMiniprogram.RequestSuccessCallbackResult, 'data' | 'statusCode' | 'header'>
 type RequestInterceptor = (
   options: RequestOptions,
 ) => RequestOptions | Promise<RequestOptions>
@@ -26,6 +26,11 @@ interface AuthData {
 interface AuthTokens {
   accessToken: string
   refreshToken: string
+}
+
+interface UploadOptions {
+  filePath: string
+  name: string
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
@@ -201,7 +206,7 @@ export default class WechatHttpClient {
     return response.statusCode === 401 || String(result?.code) === '401'
   }
 
-  async request<T = unknown>(initialOptions: RequestOptions): Promise<T> {
+  async request<T = unknown>(initialOptions: RequestOptions, upload?: UploadOptions): Promise<T> {
     let options = initialOptions
 
     for (const interceptor of this.requestInterceptors) {
@@ -218,44 +223,68 @@ export default class WechatHttpClient {
           header.Authorization = `Bearer ${requestAccessToken}`
         }
 
-        wx.request({
-          ...options,
-          url: this.resolveRequestUrl(options.url),
-          header,
-          success: (response: RequestResponse) => {
-            if (this.isUnauthorized(response)) {
-              if (hasRecovered) {
-                this.clearTokens()
-                reject(new Error('Authentication failed after session recovery'))
-                return
-              }
-
-              if (
-                this.accessToken &&
-                requestAccessToken !== this.accessToken
-              ) {
-                doRequest(true).then(resolve, reject)
-                return
-              }
-
-              this.accessToken = null
-              this.recoverAuthentication()
-                .then(() => doRequest(true))
-                .then(resolve, reject)
+        const success = (response: RequestResponse): void => {
+          if (this.isUnauthorized(response)) {
+            if (hasRecovered) {
+              this.clearTokens()
+              reject(new Error('Authentication failed after session recovery'))
               return
             }
 
-            void this.applyResponseInterceptors(response).then(
-              (result) => resolve(result as T),
-              reject,
-            )
-          },
-          fail: reject,
-        })
+            if (
+              this.accessToken &&
+              requestAccessToken !== this.accessToken
+            ) {
+              doRequest(true).then(resolve, reject)
+              return
+            }
+
+            this.accessToken = null
+            this.recoverAuthentication()
+              .then(() => doRequest(true))
+              .then(resolve, reject)
+            return
+          }
+
+          void this.applyResponseInterceptors(response).then(
+            (result) => resolve(result as T),
+            reject,
+          )
+        }
+
+        if (upload) {
+          wx.uploadFile({
+            ...upload,
+            url: this.resolveRequestUrl(options.url),
+            header,
+            success: (response) => {
+              try {
+                const data: unknown = response.statusCode === 401 ? { code: 401 } : JSON.parse(response.data)
+                if (!isRecord(data)) throw new Error('上传响应格式不正确')
+                success({ ...response, data, header: {} })
+              } catch (error) {
+                reject(error)
+              }
+            },
+            fail: reject,
+          })
+        } else {
+          wx.request({
+            ...options,
+            url: this.resolveRequestUrl(options.url),
+            header,
+            success,
+            fail: reject,
+          })
+        }
       })
     }
 
     return doRequest()
+  }
+
+  upload<T = unknown>(url: string, filePath: string, name = 'file'): Promise<T> {
+    return this.request<T>({ url, method: 'POST' }, { filePath, name })
   }
 
   async logout(): Promise<void> {
