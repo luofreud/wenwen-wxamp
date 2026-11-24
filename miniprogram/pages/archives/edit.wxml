@@ -32,7 +32,7 @@
   <block wx:else>
     <view class="form-card">
       <view class="form-item">
-        <text class="field-label field-label--required">姓名</text>
+        <text class="field-label field-label--required">配置名称</text>
         <input
           class="field-input"
           value="{{name}}"
@@ -44,7 +44,7 @@
       </view>
 
       <view class="form-item">
-        <text class="field-label field-label--required">性别</text>
+        <text class="field-label field-label--required">视角模式</text>
         <view class="gender-options">
           <view
             class="gender-option {{gender === 2 ? 'gender-option--female-active' : ''}}"
@@ -60,7 +60,7 @@
               mode="aspectFit"
               aria-hidden="true"
             />
-            <text>女生</text>
+            <text>赤道</text>
           </view>
           <view
             class="gender-option {{gender === 1 ? 'gender-option--male-active' : ''}}"
@@ -76,13 +76,13 @@
               mode="aspectFit"
               aria-hidden="true"
             />
-            <text>男生</text>
+            <text>地平</text>
           </view>
         </view>
       </view>
 
       <view class="form-item">
-        <text class="field-label field-label--required">出生时间</text>
+        <text class="field-label field-label--required">观测时间</text>
         <view class="birth-datetime">
           <picker
             class="birth-picker birth-picker--date"
@@ -91,7 +91,7 @@
             start="{{dateStart}}"
             end="{{dateEnd}}"
             bindchange="handleBirthDateChange"
-            aria-label="选择出生日期"
+            aria-label="选择观测日期"
           >
             <view class="birth-picker__value">
               <text class="selector-text {{birthDate ? 'field-value' : 'field-placeholder'}}">{{birthDate || '选择日期'}}</text>
@@ -104,7 +104,7 @@
             mode="time"
             value="{{birthTime}}"
             bindchange="handleBirthTimeChange"
-            aria-label="选择出生时间"
+            aria-label="选择观测时间"
           >
             <view class="birth-picker__value">
               <text class="selector-text {{birthTime ? 'field-value' : 'field-placeholder'}}">{{birthTime || '选择时间'}}</text>
@@ -115,8 +115,8 @@
       </view>
 
       <city-cascade-picker
-        label="出生地点"
-        placeholder="请选择"
+        label="观测地点"
+        placeholder="选择城市或经纬度"
         variant="form"
         required="{{true}}"
         value="{{birthLocationId}}"
@@ -125,6 +125,7 @@
       />
 
       <city-cascade-picker
+        wx:if="{{false}}"
         label="现居地"
         placeholder="请选择"
         variant="form"
@@ -186,7 +187,7 @@
         <input
           class="field-input"
           value="{{remark}}"
-          placeholder="如：本人、伴侣（选填）"
+          placeholder="北半球冬季星空（选填）"
           placeholder-class="field-placeholder"
           maxlength="{{remarkMaxLength}}"
           bindinput="handleRemarkInput"
@@ -201,7 +202,7 @@
         loading="{{isSubmitting}}"
         disabled="{{isSubmitting}}"
         bindtap="submitArchive"
-      >{{isSubmitting ? '保存中' : (archiveId === null ? '创建档案' : '保存修改')}}</button>
+      >{{isSubmitting ? '保存中' : (archiveId === null ? '保存配置' : '保存修改')}}</button>
     </view>
   </block>
 </view>

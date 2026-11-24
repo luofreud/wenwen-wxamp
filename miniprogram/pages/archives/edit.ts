@@ -119,7 +119,7 @@ Page({
     navigationBarHeight: 0,
     statusBarHeight: 0,
     archiveId: null as number | null,
-    pageTitle: '添加档案',
+    pageTitle: '添加记录',
     isLoading: false,
     isSubmitting: false,
     loadError: '',
@@ -268,6 +268,19 @@ Page({
 
   fillArchive(archive: Archive) {
     const birth = getBirthParts(archive.birth_time)
+    const currentLocation: ArchiveLocationValue = archive.birth_place.trim()
+      ? {
+        value: 0,
+        text: archive.birth_place,
+        longitude: archive.birth_longitude,
+        latitude: archive.birth_latitude,
+      }
+      : {
+        value: 0,
+        text: archive.current_place,
+        longitude: archive.current_longitude,
+        latitude: archive.current_latitude,
+      }
     const daylightSaving: DaylightSaving = archive.daylight_saving === 1 ? 1 : 0
     const timezoneIndex = getTimezoneIndex(
       this.data.timezoneOptions,
@@ -306,16 +319,11 @@ Page({
         longitude: archive.birth_longitude,
         latitude: archive.birth_latitude,
       },
-      currentPlaceText: archive.current_place,
-      currentLongitude: archive.current_longitude,
-      currentLatitude: archive.current_latitude,
+      currentPlaceText: currentLocation.text,
+      currentLongitude: currentLocation.longitude,
+      currentLatitude: currentLocation.latitude,
       currentLocationId: 0,
-      currentLocation: {
-        value: 0,
-        text: archive.current_place,
-        longitude: archive.current_longitude,
-        latitude: archive.current_latitude,
-      },
+      currentLocation,
       timezoneIndex,
       timezoneValue,
       timezoneLabel: timezoneOption?.label
@@ -366,6 +374,11 @@ Page({
       birthLatitude: latitude,
       birthLocationId: value,
       birthLocation: { value, text: path, longitude, latitude },
+      currentPlaceText: path,
+      currentLongitude: longitude,
+      currentLatitude: latitude,
+      currentLocationId: value,
+      currentLocation: { value, text: path, longitude, latitude },
     })
   },
 

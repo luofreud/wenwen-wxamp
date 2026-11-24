@@ -22,12 +22,12 @@
     >
       <view class="back-icon"></view>
     </navigator>
-    <text class="navigation-title">我的档案</text>
+    <text class="navigation-title">我的配置</text>
     <navigator
       class="add-action"
       url="/pages/archives/edit"
       hover-class="navigation-action--pressed"
-    >添加档案</navigator>
+    >添加配置</navigator>
   </view>
 
   <view wx:if="{{showHint && archives.length > 0}}" class="swipe-hint">

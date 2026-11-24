@@ -17,7 +17,7 @@
       >
         <view class="back-icon"></view>
       </navigator>
-      <text class="navigation-title">切换档案</text>
+      <text class="navigation-title">切换配置</text>
     </view>
   </view>
 
@@ -30,15 +30,15 @@
 
   <view wx:elif="{{loadError}}" class="state-card">
     <view class="state-symbol">!</view>
-    <text class="state-title">档案暂时没有加载出来</text>
+    <text class="state-title">配置暂时没有加载出来</text>
     <text class="state-copy">{{loadError}}</text>
     <button class="state-button" bindtap="retryLoad">重新加载</button>
   </view>
 
   <view wx:elif="{{archives.length === 0}}" class="archive-empty">
     <view class="empty-symbol">＋</view>
-    <text class="empty-title">还没有档案</text>
-    <text class="empty-copy">添加一份档案后，就可以在这里选择</text>
+    <text class="empty-title">还没有配置</text>
+    <text class="empty-copy">添加一份配置后，就可以在这里选择</text>
   </view>
 
   <view wx:else class="archive-list">
@@ -82,7 +82,7 @@
       hover-class="bottom-button--pressed"
       disabled="{{isConfirming}}"
       bindtap="addArchive"
-    >添加档案</button>
+    >添加配置</button>
     <button
       class="bottom-button bottom-button--confirm"
       hover-class="bottom-button--pressed"
