@@ -20,7 +20,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
 }
 
 const client = WechatHttpClient.getInstance({
-  baseUrl: 'https://dev.wenwenxingzuo.com/api/wechat/v1',
+  baseUrl: 'https://api.wenwenxingzuo.com/api/wechat/v1',
   loginUrl: '/auth/login',
   refreshUrl: '/auth/refresh',
   logoutUrl: '/auth/logout',
